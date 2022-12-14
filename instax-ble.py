@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+
 import asyncio
 
 from bleak import BleakScanner, BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from struct import pack, unpack_from
 from events import EventType
+import parsers
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -14,14 +17,6 @@ notifyUUID = '70954784-2d83-473d-9e5f-81e1d02d5273'
 
 def prettify_bytearray(value):
     return ' '.join([f'{x:02x}' for x in value])
-
-def parseAccelerometer(data):
-    # if len(data) < 16:
-    #     _logger.error(f"Response packet size should be >= 16 (was {len(data)})");
-    #     return
-
-    unknown, x, y, z, o = unpack_from('>BhhhB', data)
-    print(f'x: {x}, y: {y}, z: {z}, o: {o}')
 
 # data = b'aB\x00\x0f0\x00\x00\x03\xe0\xff\xe0\x00\x10\x00K'
 # parseAccelerometer(data)
@@ -37,7 +32,7 @@ def parseAccelerometer(data):
 # _logger.info(f' z: {z} \t\t{prettify_bytearray(data[10:12])}')
 # _logger.info(f' o: {o} \t\t{prettify_bytearray(data[12:13])}')
 
-def createChecksum(bytearray):
+def createChecksum(bytearray: bytearray):
     return (255 - (sum(bytearray) & 255)) & 255;
 
 def createPacket(eventType: EventType, payload:bytes=b''):
@@ -80,7 +75,7 @@ def notification_handler(characteristic: BleakGATTCharacteristic, packet: bytear
 
     match eventType:
         case EventType.XYZ_AXIS_INFO:
-            parseAccelerometer(data)
+            parsers.parseAccelerometer(data)
         case _:
             _logger.info(f"No parser for event type {eventType}")
 

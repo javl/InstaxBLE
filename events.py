@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from enum import Enum
 
 # The original code has a lot more color values, but I've only added the ones that
