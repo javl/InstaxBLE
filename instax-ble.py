@@ -42,7 +42,7 @@ def createPacket(eventType: EventType, payload:bytes=b''):
     packet = header + packetSize + opCode + payload
     packet += pack('B', createChecksum(packet))
     _logger.info(f"Sending packet: {packet}, (length: {len(packet)})")
-    _logger.info(f"  {prettify_bytearray(packet)} (length: {len(packet)}")
+    _logger.info(f"  {prettify_bytearray(packet)} (length: {len(packet)})")
     return packet
 
 def validate_checksum(data):
