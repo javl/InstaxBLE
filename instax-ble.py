@@ -74,7 +74,7 @@ def notification_handler(characteristic: BleakGATTCharacteristic, packet: bytear
 
     match eventType:
         case EventType.XYZ_AXIS_INFO:
-            print('at XYZ_AXIS_INFO')
+            parsers.XYZ_AXIS_INFO(data)
         case EventType.DEVICE_INFO_SERVICE:
             parsers.DEVICE_INFO_SERVICE(data)
         case _:
