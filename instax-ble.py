@@ -37,7 +37,7 @@ def createChecksum(bytearray: bytearray):
 
 def createPacket(eventType: EventType, payload:bytes=b''):
     header = b'\x41\x62'  # 'Ab' from client to printer, 'aB' from printer to client
-    opCode = bytes(eventType.value)
+    opCode = bytes([eventType.value[0], eventType.value[1]])
     packetSize = pack('>H', 7 + len(payload))
     packet = header + packetSize + opCode + payload
     packet += pack('B', createChecksum(packet))
@@ -61,7 +61,6 @@ def notification_handler(characteristic: BleakGATTCharacteristic, packet: bytear
     _logger.info(f'length: {length}\t{prettify_bytearray(packet[2:4])}')
     _logger.info(f'op1: {op1}\t\t{prettify_bytearray(packet[4:5])}')
     _logger.info(f'op2: {op2}\t\t{prettify_bytearray(packet[5:6])}')
-
     try:
         eventType = EventType((op1, op2))
     except ValueError:
@@ -75,7 +74,9 @@ def notification_handler(characteristic: BleakGATTCharacteristic, packet: bytear
 
     match eventType:
         case EventType.XYZ_AXIS_INFO:
-            parsers.parseAccelerometer(data)
+            print('at XYZ_AXIS_INFO')
+        case EventType.DEVICE_INFO_SERVICE:
+            parsers.DEVICE_INFO_SERVICE(data)
         case _:
             _logger.info(f"No parser for event type {eventType}")
 
@@ -96,7 +97,11 @@ async def main():
         print('connected')
         await client.start_notify(notifyUUID, notification_handler)
 
-        packet = createPacket(EventType.XYZ_AXIS_INFO) # Request serial number
+        packet = createPacket(EventType.DEVICE_INFO_SERVICE, b'\x02')  # get serialnumber
+        await client.write_gatt_char(writeUUID, packet)
+        await asyncio.sleep(1.0)
+
+        packet = createPacket(EventType.XYZ_AXIS_INFO)  # get accelerometer info
         while True:
             await client.write_gatt_char(writeUUID, packet)
             await asyncio.sleep(0.5)
