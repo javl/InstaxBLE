@@ -106,4 +106,5 @@ async def main():
             await client.write_gatt_char(writeUUID, packet)
             await asyncio.sleep(0.5)
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())
