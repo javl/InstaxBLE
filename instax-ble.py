@@ -80,6 +80,14 @@ def notification_handler(characteristic: BleakGATTCharacteristic, packet: bytear
         case _:
             _logger.info(f"No parser for event type {eventType}")
 
+def createColorPayload(colorArray, speed=5, loop=0, when=0):
+    # loop is value - 1 , so 0 = play once, 1 = play twice. 255 == repeat infinitly
+    # when: 0 = normal, 1 = on print, 2 = on print completion, 3 = pattern switch
+    payload = pack('BBBB', when, len(colorArray), speed, loop)
+    for color in colorArray:
+        payload += pack('BBB', color[0], color[1], color[2])
+    return payload
+
 async def main():
     dev = None
     devices = await BleakScanner.discover()
@@ -93,9 +101,18 @@ async def main():
 
     print(f'Found instax printer {dev.name} at {dev.address}')
 
-    async with BleakClient(dev.address) as client:
-        print('connected')
-        await client.start_notify(notifyUUID, notification_handler)
+def sendColor():
+    """ send a color pattern """
+    payload = createColorPayload([[255, 0, 0], [255, 255, 255]], 40, 255)
+    packet = createPacket(EventType.LED_PATTERN_SETTINGS, payload)
+
+    sock=socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+    print('socket created')
+    sock.connect((dev.address, 6))
+    print('socket connected')
+    sock.send(packet)
+    resp = sock.recv(8)
+    sock.close()
 
         packet = createPacket(EventType.DEVICE_INFO_SERVICE, b'\x02')  # get serialnumber
         await client.write_gatt_char(writeUUID, packet)
@@ -108,3 +125,4 @@ def print_translation_list():
 
 if __name__ == '__main__':
     # print_translation_list()
+    sendColor()
