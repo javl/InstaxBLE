@@ -101,10 +101,10 @@ async def main():
         await client.write_gatt_char(writeUUID, packet)
         await asyncio.sleep(1.0)
 
-        packet = createPacket(EventType.XYZ_AXIS_INFO)  # get accelerometer info
-        while True:
-            await client.write_gatt_char(writeUUID, packet)
-            await asyncio.sleep(0.5)
+def print_translation_list():
+    """ Helper function to print a list of all possible byte values and their translations"""
+    for x in range(0, 256):
+        print(f'int: {x}, hex: {x:02x}, bytes: {bytes([x])}')
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    # print_translation_list()
