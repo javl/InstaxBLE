@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import asyncio
+import socket
 
 from bleak import BleakScanner, BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from struct import pack, unpack_from
 from events import EventType
 import parsers
-
+from time import sleep
 import logging
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
@@ -35,9 +36,13 @@ def prettify_bytearray(value):
 def createChecksum(bytearray: bytearray):
     return (255 - (sum(bytearray) & 255)) & 255;
 
-def createPacket(eventType: EventType, payload:bytes=b''):
+def createPacket(eventType, payload:bytes=b''):
+    # for easier debugging as this allow to pass the enum value directly as well
+    if isinstance(eventType, EventType):
+        eventType = eventType.value
+
     header = b'\x41\x62'  # 'Ab' from client to printer, 'aB' from printer to client
-    opCode = bytes([eventType.value[0], eventType.value[1]])
+    opCode = bytes([eventType[0], eventType[1]])
     packetSize = pack('>H', 7 + len(payload))
     packet = header + packetSize + opCode + payload
     packet += pack('B', createChecksum(packet))
@@ -88,24 +93,41 @@ def createColorPayload(colorArray, speed=5, loop=0, when=0):
         payload += pack('BBB', color[0], color[1], color[2])
     return payload
 
-async def main():
+async def find_device(mode='ANDROID'):
+    """" Scan for our device and return it when found """
     dev = None
     while True:
         devices = await BleakScanner.discover(timeout=2)
         for d in devices:
-            if d.name.startswith('INSTAX-') and d.name.endswith('(ANDROID)'):
+            if d.name.startswith('INSTAX-') and d.name.endswith(f'({mode})'):
                 dev = d
                 break
         if dev:
             break
-    if not dev:
-        _logger.error("No printer found")
-        exit()
+    return dev
+
+
+async def main():
+    dev = await find_device()
 
     print(f'Found instax printer {dev.name} at {dev.address}')
+    async with BleakClient(dev.address) as client:
+        print('connected')
+        await client.start_notify(notifyUUID, notification_handler)
 
-def sendColor():
+        packet = createPacket(EventType.DEVICE_INFO_SERVICE, b'\x02')  # get serialnumber
+        await client.write_gatt_char(writeUUID, packet)
+        await asyncio.sleep(1.0)
+
+        packet = createPacket(EventType.XYZ_AXIS_INFO)  # get accelerometer info
+        while True:
+            await client.write_gatt_char(writeUUID, packet)
+            await asyncio.sleep(0.5)
+
+
+async def sendColor():
     """ send a color pattern """
+    dev = await find_device()
     payload = createColorPayload([[255, 0, 0], [255, 255, 255]], 40, 255)
     packet = createPacket(EventType.LED_PATTERN_SETTINGS, payload)
 
@@ -116,10 +138,8 @@ def sendColor():
     sock.send(packet)
     resp = sock.recv(8)
     sock.close()
+    return resp
 
-        packet = createPacket(EventType.DEVICE_INFO_SERVICE, b'\x02')  # get serialnumber
-        await client.write_gatt_char(writeUUID, packet)
-        await asyncio.sleep(1.0)
 
 def print_translation_list():
     """ Helper function to print a list of all possible byte values and their translations"""
@@ -127,5 +147,6 @@ def print_translation_list():
         print(f'int: {x}, hex: {x:02x}, bytes: {bytes([x])}')
 
 if __name__ == '__main__':
+    # asyncio.run(main())
     # print_translation_list()
-    sendColor()
+    asyncio.run(sendColor())
