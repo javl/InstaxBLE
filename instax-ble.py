@@ -90,10 +90,13 @@ def createColorPayload(colorArray, speed=5, loop=0, when=0):
 
 async def main():
     dev = None
-    devices = await BleakScanner.discover()
-    for d in devices:
-        if d.name.startswith('INSTAX-')  and d.name.endswith('(IOS)'):
-            dev = d
+    while True:
+        devices = await BleakScanner.discover(timeout=2)
+        for d in devices:
+            if d.name.startswith('INSTAX-') and d.name.endswith('(ANDROID)'):
+                dev = d
+                break
+        if dev:
             break
     if not dev:
         _logger.error("No printer found")
