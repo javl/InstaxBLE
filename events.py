@@ -2,6 +2,13 @@
 
 from enum import Enum
 
+# Not sure yet where these fit in, but they are used in the original code
+# 0 = VOLTAGE_INFO
+# 1 = COLOR_INFO
+# 2 = SW_INFO
+
+
+
 # The original code has a lot more color values, but I've only added the ones that
 # are in use to this file
 Imgproc_COLOR_RGB2YUV_YV12 = 131
