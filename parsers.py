@@ -13,3 +13,13 @@ def XYZ_AXIS_INFO(data):
 def DEVICE_INFO_SERVICE(data):
     serialNumber = data.decode('utf-8')
     print(f'Serialnumber: {serialNumber}')
+
+# def PRINT_IMAGE_DOWNLOAD_START(data):
+#     return data
+
+# def PRINT_IMAGE_DOWNLOAD_DATA(data):
+#     return data[4:]
+
+# def PRINT_IMAGE_DOWNLOAD_END(imageBytes):
+#     with open("output.jpg", "wb") as binary_file:
+#         binary_file.write(imageBytes)

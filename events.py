@@ -7,7 +7,17 @@ from enum import Enum
 # 1 = COLOR_INFO
 # 2 = SW_INFO
 
+# PICINF_PICTYPE_JPEG(2, ".jpg");
 
+# effects
+# NONE(0),
+# MONOCHROME(1),
+# SEPIA(2),
+# AUTO(3);
+
+# setByteArrayToSend
+
+# follow: sendprintimage
 
 # The original code has a lot more color values, but I've only added the ones that
 # are in use to this file

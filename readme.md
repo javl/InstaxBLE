@@ -10,3 +10,5 @@ Update:
 It works! The final code is not in the online repo yet, but I will add it as soon I've been able to do some cleanup.
 
 ![instax-ble-gif](https://user-images.githubusercontent.com/734644/208236529-550df42b-6d06-46ef-a38b-e683698d9ef6.gif)
+
+Test pattern image from [Vecteezy](https://www.vecteezy.com/free-vector/test-pattern)
