@@ -7,22 +7,17 @@ from enum import Enum
 # 1 = COLOR_INFO
 # 2 = SW_INFO
 
-# PICINF_PICTYPE_JPEG(2, ".jpg");
-
 # effects
 # NONE(0),
 # MONOCHROME(1),
 # SEPIA(2),
 # AUTO(3);
 
-# setByteArrayToSend
-
-# follow: sendprintimage
-
 # The original code has a lot more color values, but I've only added the ones that
 # are in use to this file
 Imgproc_COLOR_RGB2YUV_YV12 = 131
 Imgproc_COLOR_BGR2YUV_YV12 = 132
+
 
 class EventType (Enum):
     UNKNOWN = (-1, -1)
@@ -88,4 +83,4 @@ class EventType (Enum):
     CAMERA_LOG_DATE_CLEAR = (Imgproc_COLOR_BGR2YUV_YV12, 5)
     CAMERA_LOG_FILTER_START = (Imgproc_COLOR_BGR2YUV_YV12, 6)
     CAMERA_LOG_FILTER_DATA = (Imgproc_COLOR_BGR2YUV_YV12, 7)
-    CAMERA_LOG_FILTER_CLEAR = (Imgproc_COLOR_BGR2YUV_YV12, 8);
+    CAMERA_LOG_FILTER_CLEAR = (Imgproc_COLOR_BGR2YUV_YV12, 8)

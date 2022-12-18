@@ -3,9 +3,9 @@
 from events import EventType
 from struct import pack
 import asyncio
-from bleak import BleakScanner  # , BleakClient
+from bleak import BleakScanner
 import socket
-# from PIL import Image
+
 
 class InstaxBle:
     def __init__(self, printEnabled=False, printerName=None):
