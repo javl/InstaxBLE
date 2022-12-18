@@ -1,0 +1,8 @@
+{
+  "python.linting.pycodestyleEnabled": true,
+  "python.linting.enabled": true,
+  "python.linting.pycodestyleArgs": [
+    "--max-line-length=180",
+    "--ignore=E402"
+  ],
+}
