@@ -6,7 +6,7 @@
 
 This Python module can be used to control your Instax bluetooth printer. Only tested with the Instax Mini Link, but it should also work with other bluetooth Instax models (though you might have to experiment with the image size when using the Square or Wide models).
 
-This code is working, but far from finished or polished. Create an issue if you run into any trouble.
+This code is working, but it's far from being finished or polished. Create an issue if you run into any trouble.
 
 Some notes on the current state of this module:
 
