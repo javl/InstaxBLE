@@ -184,6 +184,8 @@ class InstaxBle:
 
 if __name__ == '__main__':
     instax = InstaxBle()
+    # uncomment the next line to enable actual printing
+    # instax.enable_printing()
     instax.connect()
     if instax.isConnected:
         instax.send_led_pattern([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
