@@ -3,10 +3,9 @@
 from events import EventType
 from struct import pack
 import asyncio
-from bleak import BleakScanner, BleakClient
+from bleak import BleakScanner  # , BleakClient
 import socket
-from PIL import Image
-from time import sleep
+# from PIL import Image
 
 class InstaxBle:
     def __init__(self, printEnabled=False, printerName=None):
@@ -105,25 +104,25 @@ class InstaxBle:
         """ Validate the checksum of a packet. """
         return (sum(packet) & 255) == 255
 
-    async def send_color(self):
-        """ send a color pattern """
-        im = Image.open('gradient.jpg')
-        px = im.load()
-        size = im.size if im._getexif().get(274, 0) < 5 else im.size[::-1]
-        colorArray = []
-        for x in range(0, size[0], 20):
-            color = im.getpixel((x, 0))
-            colorArray.append([color[0], color[1], color[2]])
+    # async def send_color(self):
+    #     """ send a color pattern """
+    #     im = Image.open('gradient.jpg')
+    #     px = im.load()
+    #     size = im.size if im._getexif().get(274, 0) < 5 else im.size[::-1]
+    #     colorArray = []
+    #     for x in range(0, size[0], 20):
+    #         color = im.getpixel((x, 0))
+    #         colorArray.append([color[0], color[1], color[2]])
 
-        payload = self.create_color_payload(colorArray, 10, 255)
-        packet = self.create_packet(EventType.LED_PATTERN_SETTINGS, payload)
+    #     payload = self.create_color_payload(colorArray, 10, 255)
+    #     packet = self.create_packet(EventType.LED_PATTERN_SETTINGS, payload)
 
-        sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-        sock.connect((self.device.address, 6))
-        sock.send(packet)
-        resp = sock.recv(8)
-        sock.close()
-        return resp
+    #     sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+    #     sock.connect((self.device.address, 6))
+    #     sock.send(packet)
+    #     resp = sock.recv(8)
+    #     sock.close()
+    #     return resp
 
     def send_packet(self, packet):
         """ Send a packet to the printer. """
