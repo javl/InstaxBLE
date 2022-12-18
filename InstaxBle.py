@@ -61,23 +61,23 @@ class InstaxBle:
             if timeout != 0 and secondsTried >= timeout:
                 return None
 
-    def create_color_payload(self, colorArray, speed, loop, when):
+    def create_color_payload(self, colorArray, speed, repeat, when):
         """
         Create a payload for a color pattern.
         colorArray: array of RGB values to use in animation, e.g. [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
         speed: time per frame/color. Higher is slower animation
-        loop: 0 = don't repeat (so play once), 1-254 = times to repeat, 255 = repeat forever
+        repeat: 0 = don't repeat (so play once), 1-254 = times to repeat, 255 = repeat forever
         when: 0 = normal, 1 = on print, 2 = on print completion, 3 = pattern switch
         """
 
-        payload = pack('BBBB', when, len(colorArray), speed, loop)
+        payload = pack('BBBB', when, len(colorArray), speed, repeat)
         for color in colorArray:
             payload += pack('BBB', color[0], color[1], color[2])
         return payload
 
-    def send_led_pattern(self, pattern, speed=5, loop=255, when=0):
+    def send_led_pattern(self, pattern, speed=5, repeat=255, when=0):
         """ Send a LED pattern to the Instax printer. """
-        payload = self.create_color_payload(pattern, speed, loop, when)
+        payload = self.create_color_payload(pattern, speed, repeat, when)
         packet = self.create_packet(EventType.LED_PATTERN_SETTINGS, payload)
         return self.send_packet(packet)
 
