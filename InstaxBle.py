@@ -35,7 +35,7 @@ class InstaxBle:
 
     def disconnect(self):
         if self.isConnected:
-            self.socket.disconnect()
+            self.sock.disconnect()
 
     def enable_printing(self):
         """ Enable printing. """
