@@ -188,3 +188,4 @@ if __name__ == '__main__':
     if instax.isConnected:
         instax.send_led_pattern([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
         instax.print_image('example.jpg')
+    instax.disconnect()
