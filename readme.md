@@ -14,7 +14,7 @@ Some notes on the current state of this module:
 * The script does not yet check if your image is the right size or orientation. I've tested printing with images that are 600x800 pixels and don't know what happens when you send your image in landscape orientation so you might want to rotate it beforehand.
 * For faster (and possibly more reliable) printing remove any exifdata from your image. This will reduce the amount of data that needs to be send to the device.
 
-If you want to control one of the WiFi enabled printers instead, you can use [Instax-api](https://github.com/jpwsutton/instax_api). This script borrows heavily from notes and ideas as discussed in [this](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-1352639100) instax-api thread.
+If you want to control one of the WiFi enabled printers instead, you can use [Instax-api](https://github.com/jpwsutton/instax_api). This script borrows heavily from notes and ideas as discussed in [this instax-api thread](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-1352639100).
 
 ### Installing and running
 
