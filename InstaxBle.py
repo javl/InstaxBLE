@@ -144,6 +144,7 @@ class InstaxBle:
         """ Convert an image to a bytearray """
         imgdata = None
         try:
+            # TODO: I think returning image.read() already returns bytes so no need for bytearray?
             with open(imagePath, "rb") as image:
                 imgdata = bytearray(image.read())
             return imgdata
