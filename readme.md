@@ -14,6 +14,16 @@ Some notes on the current state of this module:
 * For faster (and possibly more reliable) printing remove any exifdata from your image. This will reduce the amount of data that needs to be send to the device.
 
 If you want to control one of the WiFi enabled printers instead, you can use [Instax-api](https://github.com/jpwsutton/instax_api). This script borrows heavily from notes and ideas as discussed in [this](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-1352639100) instax-api thread.
+
+### Installing and running
+
+    git clone https://github.com/javl/InstaxBLE.git
+    cd InstaxBle
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    python3 InstaxBLE.py
+
 ### Enable printing
 By default printing is disabled so you can test your code without the risk of accidental prints.
 To enable printing, call `instax.enable_printing()` or specify `printingEnabled=True` in the constructor.
