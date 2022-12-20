@@ -57,11 +57,11 @@ So for example, to make the LED blink blue:
     send_led_pattern(colors=[[0, 0, 255], [0, 0, 0]], speed=5, repeat=255, when=0)
 
 ## Possible updates:
-- [] Get battery level
-- [] Get number of photo's left in cartridge
-- [] Auto rotate image
-- [] Convert to jpg if needed
-- [] Strip exif data
+- [ ] Get battery level
+- [ ] Get number of photo's left in cartridge
+- [ ] Auto rotate image
+- [ ] Convert to jpg if needed
+- [ ] Strip exif data
 
 # image credit
 Test pattern image from [Vecteezy](https://www.vecteezy.com/free-vector/test-pattern)
