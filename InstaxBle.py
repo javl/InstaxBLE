@@ -150,9 +150,13 @@ class InstaxBle:
         except Exception as e:
             print('Error loading image: ', e)
 
-    def print_image(self, imagePath):
-        """ print an image """
-        imgData = self.image_to_bytes(imagePath)
+    def print_image(self, imgSrc):
+        """ print an image. Either pass a path to an image or a bytearray"""
+        if isinstance(imgSrc, str):  # if it's a path, load the image contents
+            imgData = self.image_to_bytes(imgSrc)
+        else:
+            imgData = imgSrc
+
         printCommands = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData)))
         ]
