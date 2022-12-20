@@ -60,7 +60,7 @@ So for example, to make the LED blink blue:
 - [ ] Get battery level
 - [ ] Get number of photo's left in cartridge
 - [ ] Auto rotate image
-- [ ] Convert to jpg if needed
+- [ ] Convert to jpg if given a different filetype
 - [ ] Strip exif data
 
 # image credit
