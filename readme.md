@@ -16,6 +16,15 @@ Some notes on the current state of this module:
 
 If you want to control one of the WiFi enabled printers instead, you can use [Instax-api](https://github.com/jpwsutton/instax_api). This script borrows heavily from notes and ideas as discussed in [this instax-api thread](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-1352639100).
 
+
+This module was made with the goal of using my Instax Link Mini with a Raspberry Pi (3B+). Initially I used sockets for the connection, just like the Android app, but for this you need to connect to the `INSTAX-xxx (Android)` device, which for some reason doesn't show up when I scan for BLE devices on the pi. Also, this doesn't work on MacOS (and maybe Windows?). So the second version of this script connects to the `INSTAX-xxx (IOS)` device and uses regular GATT commands. On IOS and MacOS a high bandwidth transfer speed (mtu) gets negotiated after connecting to the printer, but on Linux this speed is stuck at 24, which means all of the packets going to the printer need to be split up into tiny packets of only ~20 bytes. For the most robust experience you need to wait for an acknowlegement from the printer after every group of packets, but this acknowledgement takes a while, taking the total transfer time for a photo up to about 40 seconds, which is too long for my project.
+So, I opted NOT to wait for this acknowledgement and just push all data to the printer as fast as we can. This means the image transfer takes just a second or two, but it is less robust as you can't catch any errors during transfer. Then again, there shouldn't be any errors to begin with.
+
+
+### Todo / nice to haves:
+[ ] Add some more (useful) LED patterns to LedPatterns.py
+[ ] Find a way to speed up transfer when waiting for acknowledgement after each packet
+
 ### Installing and running
 
     git clone https://github.com/javl/InstaxBLE.git
