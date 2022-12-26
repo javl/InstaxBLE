@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from events import EventType
+from EventType import EventType
 from struct import pack, unpack_from
 import asyncio
 from bleak import BleakScanner, BleakClient
@@ -43,25 +43,18 @@ class InstaxBle:
         self.maxPacketSize = 20  # Chop packets into smaller ones of this size, to be sent in sequence
 
         # self.event_loop = None  # .new_event_loop()
-        try:
-            self.event_loop = asyncio.get_event_loop()
-        except RuntimeError:
-            self.event_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.event_loop)
-
-        # self.event_loop.run_forever()
-        # self.loop = asyncio
-
-        # self.event_loop = asyncio.get_event_loop()
-        # print(self.event_loop)
+        # try:
+        #     self.event_loop = asyncio.get_event_loop()
+        # except RuntimeError:
+        #     print('make our own event loop')
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
 
         if not address:
-            # self.address = self.event_loop.run(self.find_device())
             self.address = self.event_loop.run(self.find_device())
             if self.address is None:
                 print('No printer found')
                 return
-        # asyncio.run(self.attach_notification_handler())
 
     async def find_device(self, timeout=0):
         """"
@@ -90,19 +83,6 @@ class InstaxBle:
             if timeout != 0 and secondsTried >= timeout:
                 return None
 
-    # def ensure_connection(func):
-    #     async def decorated(self, *kargs, **kwargs):
-    #         if not self.client.is_connected:
-    #             if self.client.address is None:
-    #                 self.client = BleakClient(self.address)
-    #             print('not connected, connecting...')
-    #             await self.client.connect()
-    #             print('attach notify...')
-    #             await self.client.start_notify(self.notifyUUID, self.notification_handler)
-    #             print('connected and attached notification handler')
-    #         func(self, *kargs, **kwargs)
-    #     return decorated
-
     async def ensure_connection(self):
         """" Ensure that we are connected to the printer. """
         if not self.client.is_connected:
@@ -111,33 +91,8 @@ class InstaxBle:
             await self.client.connect()
         await self.client.start_notify(self.notifyUUID, self.notification_handler)
 
-    # def ensure_connection(func):
-    #     async def decorated(self, *kargs, **kwargs):
-    #         if not self.client.is_connected:
-    #             if self.client.address is None:
-    #                 self.client = BleakClient(self.address)
-    #             print('not connected, connecting...')
-    #             await self.client.connect()
-    #             print('attach notify...')
-    #             await self.client.start_notify(self.notifyUUID, self.notification_handler)
-    #             print('connected and attached notification handler')
-    #         func(self, *kargs, **kwargs)
-    #     return decorated
-
-    # def __init__(self, printingEnabled=False, printerName=None):
-    #     """
-    #     Initialize the InstaxBle class.
-    #     printingEnabled: by default, actual printing is disabled to prevent misprints.
-    #     printerName: if specified, will only connect to a printer with this name.
-    #     """
-    #     self.printingEnabled = printingEnabled
-    #     self.device = None
-    #     self.printerName = printerName
-    #     self.writeUUID = '70954783-2d83-473d-9e5f-81e1d02d5273'
-    #     self.notifyUUID = '70954784-2d83-473d-9e5f-81e1d02d5273'
-    #     self.client = BleakClient(None)
-
     def notification_handler(self, characteristic, packet):
+        print(f'\nat notification_handler, characteristic: {characteristic}')
         if len(packet) < 8:
             print(f"Error: response packet size should be >= 8 (was {len(packet)})")
             raise
@@ -145,44 +100,9 @@ class InstaxBle:
             print("Checksum validation error")
             raise
 
-        # header, length, op1, op2 = unpack_from('<HHBB', packet)
-        # print('header: ', header, '\t', self.prettify_bytearray(packet[0:2]))
-        # print('length: ', length, '\t', self.prettify_bytearray(packet[2:4]))
-        # print('op1: ', op1, '\t\t', self.prettify_bytearray(packet[4:5]))
-        # print('op2: ', op2, '\t\t', self.prettify_bytearray(packet[5:6]))
-
         op1, op2 = unpack_from('<BB', packet[4:6])
         reponseEventType = EventType((op1, op2))
-
         self.responseEventTypeReceived = reponseEventType
-        # print('notification_handler: ', self.responseEventTypeReceived)
-
-        # # data = packet[4:-1]  # the packet without header and checksum
-        # data = packet[6:-1]  # the packet without headers and checksum
-        # print(f'Response data: {data} (length: {len(data)}, checksum OK)')
-        # print(f'  {self.prettify_bytearray(data)}')
-
-    # async def attach_notification_handler(self):
-    #     if not self.address:
-    #         print('No device address set')
-    #         return
-
-    #     async with BleakClient(self.address) as client:
-    #         if not client.is_connected:
-    #             await client.connect()
-    #         await client.start_notify(self.notifyUUID, self.notification_handler)
-
-    def connect(self, timeout=0):
-        """ Connect to the printer. Quit trying after timeout seconds. """
-        # self.isConnected = False
-        try:
-            self.client = BleakClient(self.address)
-            if not self.client.is_connected:
-                print('not connected, connect')
-                self.event_loop.run(self.client.connect())
-            # self.event_loop.create_task(self.client.start_notify(self.notifyUUID, self.notification_handler))
-        except Exception as e:
-            print('error on connecting or attaching notification_handler: ', e)
 
     def disconnect(self):
         """ Disconnect from the printer. """
@@ -198,22 +118,6 @@ class InstaxBle:
         """ Disable printing. """
         self.printingEnabled = False
 
-    # async def find_device(self, timeout=0, mode='IOS'):
-    #     """" Scan for our device and return it when found """
-    #     print('Looking for instax printer...')
-    #     secondsTried = 0
-    #     while True:
-    #         devices = await BleakScanner.discover(timeout=1)
-    #         for device in devices:
-    #             if device.name.startswith('INSTAX-'):
-    #                 print(device.name)
-    #             if (self.printerName is None and device.name.startswith('INSTAX-') and device.name.endswith(f'({mode})')) or \
-    #                device.name == self.printerName:
-    #                 return device
-    #         secondsTried += 1
-    #         if timeout != 0 and secondsTried >= timeout:
-    #             return None
-
     def create_color_payload(self, colorArray, speed, repeat, when):
         """
         Create a payload for a color pattern.
@@ -228,26 +132,15 @@ class InstaxBle:
             payload += pack('BBB', color[0], color[1], color[2])
         return payload
 
-    # async def send_led_pattern(self, pattern, speed=5, repeat=255, when=0):
-    #     """ Send a LED pattern to the Instax printer. """
-    #     payload = self.create_color_payload(pattern, speed, repeat, when)
-    #     packet = self.create_packet(EventType.LED_PATTERN_SETTINGS, payload)
-
-    #     # try:
-    #     #     event_loop = asyncio.get_event_loop()
-    #     #     print('was event loop')
-    #     #     event_loop.run(self.send_packet(packet))
-    #     # except Exception as e:
-    #     await self.send_packet(packet)
-
-    async def _await_send_packet(self, cmdEventType, packet):
-        await self.send_packet(cmdEventType, packet)
+    # async def _await_send_packet(self, cmdEventType, packet, waitForResponse=True):
+    #     await self.send_packet(cmdEventType, packet, waitForResponse)
 
     def send_led_pattern(self, pattern, speed=5, repeat=255, when=0):
         """ Send a LED pattern to the Instax printer. """
         payload = self.create_color_payload(pattern, speed, repeat, when)
         packet = self.create_packet(EventType.LED_PATTERN_SETTINGS, payload)
-        self.event_loop.run_until_complete(self._await_send_packet(EventType.LED_PATTERN_SETTINGS, packet))
+        # self.event_loop.run_until_complete(self._await_send_packet(EventType.LED_PATTERN_SETTINGS, packet))
+        self.event_loop.run_until_complete(self.send_packet(EventType.LED_PATTERN_SETTINGS, packet, True))
 
     def prettify_bytearray(self, value):
         """ Helper funtion to convert a bytearray to a string of hex values. """
@@ -273,14 +166,7 @@ class InstaxBle:
         """ Validate the checksum of a packet. """
         return (sum(packet) & 255) == 255
 
-    # async def receivedResponse(self):
-    #     """ Wait for a response from the printer. """
-    #     print('waiting for response')
-    #     while not self.responseEventTypeReceived:
-    #         await asyncio.sleep(0.1)
-    #     print('done waiting for response')
-
-    async def wait_for_response(self):
+    async def wait_for_response(self, responseExcpected):
         """"
         Wait for a response from the printer.
         """
@@ -290,6 +176,10 @@ class InstaxBle:
         print(f'Notices new response: {self.responseEventTypeReceived} received')
         eventTypeReceived = self.responseEventTypeReceived
 
+        if eventTypeReceived == responseExcpected:
+            print(f"is what we are waiting for: {eventTypeReceived} == {responseExcpected}")
+        else:
+            print(f"is NOT what we are waiting for: {eventTypeReceived} == {responseExcpected}")
         self.responseEventTypeReceived = None
         self.responseEventTypeSent = None
 
@@ -302,13 +192,13 @@ class InstaxBle:
             print('image parts left: ', len(self.imageDataQueue), 'parts')
             if len(self.imageDataQueue) > 0:
                 next_packet = self.imageDataQueue.pop(0)
-                await self.send_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, next_packet)
+                await self.send_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, next_packet, False)
             else:
                 print('end of image data, so send the final packet')
         else:
             print('uncaught response:', eventTypeReceived)
 
-    async def send_packet(self, cmdEventType, packet):
+    async def send_packet(self, cmdEventType, packet, waitForResponse=True):
         """ Send a packet to the printer. """
         await self.ensure_connection()
         for i in range(0, len(packet), self.maxPacketSize):
@@ -318,16 +208,26 @@ class InstaxBle:
             self.responseEventTypeReceived = None
             self.responseEventTypeSent = cmdEventType
             await self.client.write_gatt_char(self.writeUUID, packet[i:i + self.maxPacketSize])
+        if waitForResponse:
+            print('awaiting response...')
+            await self.wait_for_response(cmdEventType)
 
-        # print("wait for response")
-        # await self.receivedResponse() before we continue to the next complete packet
-        # await self.wait_for_response()
+    async def get_status(self):
+        """ Get the printer status. """
+        packet = self.create_packet(EventType.STATUS)
+        await self.send_packet(packet)
 
-    # TODO: printer doesn't seem to respond to this command
+    # TODO: printer doesn't seem to respond to this
+    # async def reset(self):
+    #     """ Reset the printer. """
+    #     packet = self.create_packet(EventType.RESET)
+    #     await self.send_packet(packet)
+
+    # TODO: printer doesn't seem to respond to this
     # async def shut_down(self):
     #     """ Shut down the printer. """
     #     packet = self.create_packet(EventType.SHUT_DOWN)
-    #     return await self.send_packet(packet)
+    #     await self.send_packet(packet)
 
     # def wait(self, seconds):
     #     """ Wait for a given number of seconds. """
@@ -352,6 +252,8 @@ class InstaxBle:
         Images are cut up into chunks of <imageChunkSize> size (and padded with 0s if needed for the last part)
         These chunks in turn get sent to the printer in snippets of <maxPacketSize> size.
         """
+        print('send image')
+        self.printPacketQueue = []
         imgData = imgSrc
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             imgData = self.image_to_bytes(imgSrc)
@@ -379,11 +281,19 @@ class InstaxBle:
             return
 
         printStartCmd = self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData)))
-        await self.send_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, printStartCmd)
-
+        await self.send_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, printStartCmd, True)
+        print("go send parts")
+        # await self.wait_for_response(EventType.PRINT_IMAGE_DOWNLOAD_START)
         for index, packet in enumerate(self.imageDataQueue):
-            print(f'sending image packet {index}/{len(self.imageDataQueue)}')
-            await self.send_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, packet)
+            # print(f'sending image packet {index+1}/{len(self.imageDataQueue)}')
+            await self.send_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, packet, False)
+        print('sent all parts')
+
+        printEndCmd = self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_END)
+        await self.send_packet(EventType.PRINT_IMAGE_DOWNLOAD_END, printEndCmd, True)
+
+        printCmd = self.create_packet(EventType.PRINT_IMAGE)
+        await self.send_packet(EventType.PRINT_IMAGE, printCmd, True)
 
         # for index, packet in enumerate(printCommands):
         #     # TODO: after each packet wait for the server's response before sending
@@ -431,19 +341,18 @@ class InstaxBle:
 #     await instax.send_led_pattern(LedPatterns.pulseGreen)
 #     await instax.print_image('example.jpg')
 #     await instax.disconnect()
-
 if __name__ == '__main__':
     instax = InstaxBle(address='FA:AB:BC:4E:20:CE', printerName=None, debug=True)
     try:  # make sure to use try except so we always disconnect
         # instax.connect()
         # print('call send_led_pattern')
-        # instax.send_led_pattern(LedPatterns.pulseGreen)  # see LedPatterns.py for some other options
+        instax.send_led_pattern(LedPatterns.pulseGreen)  # see LedPatterns.py for some other options
         # sleep(2)
         # instax.send_led_pattern(LedPatterns.blinkBlue)
         # instax.wait(1.0)
         print('call print_image')
         instax.print_image('example.jpg')
-        asyncio.run(asyncio.sleep(5.0))
+        asyncio.run(asyncio.sleep(50.0))
         instax.disconnect()
     # sleep(5)
     # instax.disconnect()
