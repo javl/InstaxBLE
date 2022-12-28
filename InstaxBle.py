@@ -198,6 +198,7 @@ if __name__ == '__main__':
     instax = InstaxBle()
     # or specify your device address to skip searching
     # instax = InstaxBle(deviceAddress='88:B4:36:xx:xx:xx')
+
     # uncomment the next line to enable actual printing
     # instax.enable_printing()
     instax.connect()
