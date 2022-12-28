@@ -8,7 +8,7 @@ import socket
 
 
 class InstaxBle:
-    def __init__(self, printEnabled=False, printerName=None):
+    def __init__(self, deviceAddress=None, deviceName=None, printEnabled=False, printerName=None):
         """
         Initialize the InstaxBle class.
         printEnabled: by default, actual printing is disabled to prevent misprints.
@@ -17,24 +17,33 @@ class InstaxBle:
         self.printEnabled = printEnabled
         self.isConnected = False
         self.device = None
-        self.printerName = printerName
+        self.deviceAddress = deviceAddress
+        self.deviceName = deviceName
         self.sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 
     def connect(self, timeout=0):
         """ Connect to the printer. Quit trying after timeout seconds. """
         self.isConnected = False
-        self.device = asyncio.run(self.find_device(timeout=timeout))
-        if self.device:
-            print(f'found device {self.device.name}, connecting...')
-            try:
-                self.sock.connect((self.device.address, 6))
-                self.isConnected = True
-                print('connected')
-            except Exception as e:
-                print(f'connection failed: {e}')
+        if self.deviceAddress is None:
+            self.device = asyncio.run(self.find_device(timeout=timeout))
+            if self.device:
+                print(f'found device {self.device.name}, connecting...')
+                self.deviceAddress = self.device.address
+            else:
+                print('no device found')
+                exit()
+
+        try:
+            print(f'connecting to device {self.deviceAddress}')
+            self.sock.connect((self.deviceAddress, 6))
+            self.isConnected = True
+            print('connected')
+        except Exception as e:
+            print(f'connection failed: {e}')
 
     def disconnect(self):
         if self.isConnected:
+            print(dir(self.sock))
             self.sock.disconnect()
 
     def enable_printing(self):
@@ -53,8 +62,8 @@ class InstaxBle:
             devices = await BleakScanner.discover(timeout=1)
             for device in devices:
                 # if (self.printerName is None and dev.name.startswith('INSTAX-') and dev.name.endswith(mode)) or \
-                if (self.printerName is None and device.name.startswith('INSTAX-') and device.name.endswith(f'({mode})')) or \
-                   device.name == self.printerName:
+                if (self.deviceName is None and device.name.startswith('INSTAX-') and device.name.endswith(f'({mode})')) or \
+                   device.name == self.deviceName or device.address == self.deviceAddress:
                     return device
             secondsTried += 1
             if timeout != 0 and secondsTried >= timeout:
@@ -162,7 +171,7 @@ class InstaxBle:
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData)))
         ]
 
-        # divide image data up into chunks of 900 bytes and pad the last chunk with 0s if needed
+        # divide image data up into chunks of 900 bytes and pad the last chunk with zeroes if needed
         imgDataChunks = [imgData[i:i + 900] for i in range(0, len(imgData), 900)]
         if len(imgDataChunks[-1]) < 900:
             imgDataChunks[-1] = imgDataChunks[-1] + bytes(900 - len(imgDataChunks[-1]))
@@ -183,15 +192,15 @@ class InstaxBle:
         for index, packet in enumerate(printCommands):
             print(f'sending image packet {index+1}/{len(printCommands)}')
             self.send_packet(packet)
-            # print(f'({len(packet)}) {self.prettify_bytearray(packet[:40])}')
 
 
 if __name__ == '__main__':
     instax = InstaxBle()
+    # or specify your device address to skip searching
+    # instax = InstaxBle(deviceAddress='88:B4:36:xx:xx:xx')
     # uncomment the next line to enable actual printing
     # instax.enable_printing()
     instax.connect()
     if instax.isConnected:
         instax.send_led_pattern([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
         instax.print_image('example.jpg')
-    instax.disconnect()
