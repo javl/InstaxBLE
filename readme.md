@@ -1,6 +1,6 @@
 # Instax-BLE
 
-<img align="right" style="margin:10px" src="https://user-images.githubusercontent.com/734644/208236529-550df42b-6d06-46ef-a38b-e683698d9ef6.gif">
+<img align="right" style="margin:10px" src="https://github.com/javl/InstaxBLE/blob/main/instax-ble.gif?raw=true">
 
 ## Control your Instax Mini Link printer from Python
 
