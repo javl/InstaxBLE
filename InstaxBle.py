@@ -40,10 +40,9 @@ class InstaxBle:
         except Exception as e:
             print(f'connection failed: {e}')
 
-    def disconnect(self):
+    def close(self):
         if self.isConnected:
-            print(dir(self.sock))
-            self.sock.disconnect()
+            self.sock.close()
 
     def enable_printing(self):
         """ Enable printing. """
@@ -178,7 +177,7 @@ class InstaxBle:
         for index, chunk in enumerate(imgDataChunks):
             imgDataChunks[index] = pack('>I', index) + chunk  # add chunk number as int (4 bytes)
             printCommands.append(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, pack('>I', index) + chunk))
-        
+
         if self.printEnabled:
             printCommands.extend([
                 self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_END),
