@@ -140,7 +140,7 @@ class InstaxBle:
             self.sock.send(packet)
             # print('sent')
             response = self.sock.recv(64)
-            self.sock.close()
+            # self.sock.close()
             return response
 
     # TODO: printer doesn't seem to respond to this
