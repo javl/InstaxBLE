@@ -19,7 +19,7 @@ When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `
 You can now enter this address directy when creating your `InstaxBLE` instance instead of having the script search for it:
 
     instax = InstaxBLE(deviceAddress='88:B4:36:xx:xx:xx')
-    
+
 
 ### Notes on usage
 
@@ -52,7 +52,7 @@ To enable printing, call `instax.enable_printing()` or specify `printingEnabled=
 ### Using a specific printer
 By default InstaxBle connects to the first printer it can find. You can specify the name of the printer you want to connect to in the constructor. Note: you need to use the device name that ends in `(Android)`, not `(IOS)`:
 
-    instax = InstaxBle(deviceName='Instax-123456(Android)')
+    instax = InstaxBle(deviceName='Instax-12345678(Android)')
 
 or specify the device address instead:
 
@@ -84,7 +84,7 @@ So for example, to make the LED blink blue:
     send_led_pattern(colors=[[0, 0, 255], [0, 0, 0]], speed=5, repeat=255, when=0)
     # or while getting the color pattern from `LedPatterns`
     send_led_pattern(LedPatterns.blinkBLue, speed=5, repeat=255, when=0)
-    
+
 
 ## Possible updates:
 Printing process:
