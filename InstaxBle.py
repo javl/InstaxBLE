@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from events import EventType
+from EventType import EventType
 from struct import pack
 import asyncio
 from bleak import BleakScanner
