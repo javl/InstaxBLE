@@ -6,7 +6,6 @@ import asyncio
 from bleak import BleakScanner
 import socket
 
-
 class InstaxBle:
     def __init__(self, deviceAddress=None, deviceName=None, printEnabled=False, printerName=None):
         """
@@ -179,16 +178,15 @@ class InstaxBle:
         for index, chunk in enumerate(imgDataChunks):
             imgDataChunks[index] = pack('>I', index) + chunk  # add chunk number as int (4 bytes)
             printCommands.append(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, pack('>I', index) + chunk))
-
-        printCommands.extend([
-            self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_END),
-            self.create_packet(EventType.PRINT_IMAGE),
-            self.create_packet((0, 2), b'\x02'),
-        ])
-
-        if not self.printEnabled:
-            print("Printing is disabled")
-            return
+        
+        if self.printEnabled:
+            printCommands.extend([
+                self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_END),
+                self.create_packet(EventType.PRINT_IMAGE),
+                self.create_packet((0, 2), b'\x02'),
+            ])
+        else:
+            print("Printing is disabled. Sending all packets except for PRINT_IMAGE command")
 
         for index, packet in enumerate(printCommands):
             print(f'sending image packet {index+1}/{len(printCommands)}')
