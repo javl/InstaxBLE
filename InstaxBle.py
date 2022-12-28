@@ -187,7 +187,8 @@ class InstaxBle:
         ])
 
         if not self.printEnabled:
-            return "Printing is disabled"
+            print("Printing is disabled")
+            return
 
         for index, packet in enumerate(printCommands):
             print(f'sending image packet {index+1}/{len(printCommands)}')
