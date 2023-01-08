@@ -15,10 +15,15 @@ When connected to the Android version data is send over a socket: this works wel
 The IOS version of the Instax device uses `gatt` commands, which you can find in the (even more experimental) `gatt` branch in this repo. This works both on Linux and MacOS (not sure about Windows) but has a huge drawback on Linux. On connecting to the printer on MacOS the system and the printer will decice on a (high) transfer speed together, but on Linux you're stuck at the lowest transfer speed, meaning it can take up to a minute to send the image to the printer.
 
 ### Raspberry Pi
-When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `INSTAX-xxx(ANDROID)` device. However, I am able to connect to it if I enter the device address manually. I was able to find this address using my Android phone. Open the Instax app and connect to your printer,  then go to your phone's bluetooth settings and in the known devices list tap the gear next to the Instax device. It will show the device address (probably something like `88:B4:36:xx:xx:xx`) at the bottom of the screen. Make sure to disconnect / forget the device before connecting from another device.
+When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `INSTAX-xxx(ANDROID)` device. However, I am able to connect to it if I enter the device address manually. 
+
+The `INSTAX-xxx(ANDROID)` and `INSTAX-xxx(IOS)` endpoints share part of their address: if you can find the address for the IOS endpoint it looks something like `FA:AB:BC:xx:xx:xx`, while the Android one looks like `88:B4:36:xx:xx:xx`. So if you can find one, just swap out the first 6 characters to get the other one.
+
+An alternative way to find it is via your Android phone: open the Instax app and connect to your printer,  then go to your phone's bluetooth settings and in the known devices list tap the gear next to the Instax device. It will show the device address (probably something like `88:B4:36:xx:xx:xx`) at the bottom of the screen. Make sure to disconnect / forget the device before connecting from another device.
 You can now enter this address directy when creating your `InstaxBLE` instance instead of having the script search for it:
 
     instax = InstaxBLE(deviceAddress='88:B4:36:xx:xx:xx')
+    
 
 
 ### Notes on usage
