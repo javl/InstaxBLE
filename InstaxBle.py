@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from EventType import EventType
+from Types import EventType, InfoType
 from struct import pack
 import asyncio
 from bleak import BleakScanner
 import socket
+
 
 class InstaxBle:
     def __init__(self, deviceAddress=None, deviceName=None, printEnabled=False, printerName=None):

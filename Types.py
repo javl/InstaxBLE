@@ -84,3 +84,15 @@ class EventType (Enum):
     CAMERA_LOG_FILTER_START = (Imgproc_COLOR_BGR2YUV_YV12, 6)
     CAMERA_LOG_FILTER_DATA = (Imgproc_COLOR_BGR2YUV_YV12, 7)
     CAMERA_LOG_FILTER_CLEAR = (Imgproc_COLOR_BGR2YUV_YV12, 8)
+
+
+class InfoType (Enum):
+    """
+        Used as payload for EventType.DEVICE_INFO_SERVICE
+    """
+    IMAGE_SUPPORT_INFO = 0
+    BATTERY_INFO = 1
+    PRINTER_FUNCTION_INFO = 2
+    PRINT_HISTORY_INFO = 3
+    CAMERA_FUNCTION_INFO = 4
+    CAMERA_HISTORY_INFO = 5
