@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from Types import EventType, InfoType
-from struct import pack
+from struct import pack, unpack_from
 import asyncio
 from bleak import BleakScanner
 import socket
@@ -114,6 +114,11 @@ class InstaxBle:
         """ Validate the checksum of a packet. """
         return (sum(packet) & 255) == 255
 
+    def get_battery_info(self):
+        """ Get battery info from the printer. """
+        packet = self.create_packet(EventType.DEVICE_INFO_SERVICE, bytes(InfoType.BATTERY_INFO.value))
+        print('resp: ', self.send_packet(packet))
+
     # async def send_color(self):
     #     """ send a color pattern """
     #     im = Image.open('gradient.jpg')
@@ -194,15 +199,27 @@ class InstaxBle:
             print(f'sending image packet {index+1}/{len(printCommands)}')
             self.send_packet(packet)
 
+    def get_accelerometer_data(self):
+        """ Get accelerometer data from the printer. """
+        packet = self.create_packet(EventType.XYZ_AXIS_INFO)
+        response = self.send_packet(packet)
+        header, length, op1, op2 = unpack_from('>HHBB', response)
+        if (op1, op2) == EventType.XYZ_AXIS_INFO.value:
+            x, y, z, o = unpack_from('<hhhB', response[6:-1])
+            print(f'x: {x}, y: {y}, z: {z}, o: {o}')
+
 
 if __name__ == '__main__':
-    instax = InstaxBle()
+    # let the module search for the first instax printer it finds
+    # index = InstaxBle()
     # or specify your device address to skip searching
-    # instax = InstaxBle(deviceAddress='88:B4:36:xx:xx:xx')
-
+    instax = InstaxBle(deviceAddress='88:B4:36:4E:20:CE')
     # uncomment the next line to enable actual printing
     # instax.enable_printing()
     instax.connect()
     if instax.isConnected:
         instax.send_led_pattern([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
-        instax.print_image('example.jpg')
+        # instax.print_image('example.jpg')
+        # instax.get_battery_info()
+        # instax.get_accelerometer_data()
+        # instax.print_image('example.jpg')
