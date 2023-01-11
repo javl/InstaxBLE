@@ -60,9 +60,11 @@ class InstaxBle:
         while True:
             devices = await BleakScanner.discover(timeout=1)
             for device in devices:
-                # if (self.printerName is None and dev.name.startswith('INSTAX-') and dev.name.endswith(mode)) or \
-                if (self.deviceName is None and device.name.startswith('INSTAX-') and device.name.endswith(f'({mode})')) or \
+                if (self.deviceName is None and device.name.startswith('INSTAX-')) or \
                    device.name == self.deviceName or device.address == self.deviceAddress:
+                    if device.address.startswith('FA:AB:BC'):  # found the IOS endpoint, convert to ANDROID
+                        device.address = device.address.replace('FA:AB:BC', '88:B4:36')
+                        device.name = device.name.replace('IOS', 'ANDROID')
                     return device
             secondsTried += 1
             if timeout != 0 and secondsTried >= timeout:
