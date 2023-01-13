@@ -230,7 +230,10 @@ if __name__ == '__main__':
     # instax = InstaxBle()
     # or specify your device address to skip searching
     instax = InstaxBle(deviceAddress='88:B4:36:4E:20:CE')
+
     # uncomment the next line to enable actual printing
+    # otherwise it will go through the whole printing process except
+    # for sending the final 'go print' command
     # instax.enable_printing()
     instax.connect()
     if instax.isConnected:
