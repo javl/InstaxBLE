@@ -20,6 +20,7 @@ Imgproc_COLOR_BGR2YUV_YV12 = 132
 
 
 class EventType (Enum):
+    """ Events we can send to the printer """
     UNKNOWN = (-1, -1)
     SUPPORT_FUNCTION_AND_VERSION_INFO = (0, 0)
     DEVICE_INFO_SERVICE = (0, 1)
@@ -87,9 +88,7 @@ class EventType (Enum):
 
 
 class InfoType (Enum):
-    """
-        Used as payload for EventType.DEVICE_INFO_SERVICE
-    """
+    """ Payload types to use with EventType.DEVICE_INFO_SERVICE """
     IMAGE_SUPPORT_INFO = 0
     BATTERY_INFO = 1
     PRINTER_FUNCTION_INFO = 2
