@@ -19,6 +19,9 @@ class InstaxBle:
         self.device = None
         self.deviceAddress = deviceAddress
         self.deviceName = deviceName
+        self.batteryState = None
+        self.batteryPercentage = None
+        self.printsLeft = None
         self.sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 
     def connect(self, timeout=0):
@@ -114,10 +117,23 @@ class InstaxBle:
         """ Validate the checksum of a packet. """
         return (sum(packet) & 255) == 255
 
-    def get_battery_info(self):
-        """ Get battery info from the printer. """
-        packet = self.create_packet(EventType.DEVICE_INFO_SERVICE, bytes(InfoType.BATTERY_INFO.value))
-        print('resp: ', self.send_packet(packet))
+    def get_device_state(self):
+        """ Get device state, like battery level, if it is
+        charging, number of prints left, etc. """
+        packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, bytes([InfoType.BATTERY_INFO.value]))
+        resp = self.send_packet(packet)
+        self.batteryState, self.batteryPercentage = unpack_from('>BB', resp[8:10])
+
+        packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, bytes([InfoType.PRINTER_FUNCTION_INFO.value]))
+        resp = self.send_packet(packet)
+        dataByte = resp[8]
+        self.photosLeft = dataByte & 15
+        self.isCharging = (1 << 7) & dataByte >= 1
+
+        print("battery level: ", self.batteryPercentage)
+        print('photos left: ', self.photosLeft)
+        print("battery state: ", self.batteryState)
+        print('charging: ', self.isCharging)
 
     # async def send_color(self):
     #     """ send a color pattern """
@@ -220,6 +236,6 @@ if __name__ == '__main__':
     if instax.isConnected:
         instax.send_led_pattern([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
         # instax.print_image('example.jpg')
-        # instax.get_battery_info()
+        instax.get_device_state()
         # instax.get_accelerometer_data()
         # instax.print_image('example.jpg')
