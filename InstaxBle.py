@@ -211,7 +211,7 @@ class InstaxBle:
 
 if __name__ == '__main__':
     # let the module search for the first instax printer it finds
-    # index = InstaxBle()
+    # instax = InstaxBle()
     # or specify your device address to skip searching
     instax = InstaxBle(deviceAddress='88:B4:36:4E:20:CE')
     # uncomment the next line to enable actual printing
