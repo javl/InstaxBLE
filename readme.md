@@ -97,6 +97,7 @@ The main branch uses sockets which only seem to work on Linux, while the GATT ap
 - [ ] Alter main branch so that all socket/Linux specific code is pulled from a separate file
 - [ ] Allow loading a different method file for MacOS that uses GATT instead of sockets.
 - [ ] Check which one (if any) works on Windows?
+- [ ] Get rid of asyncio? Not sure if this is needed
 
 Printing process:
 - [ ] Currently both the socket and gatt version of this script send the image over in chunks of 900 bytes, like the Android app does. But the IOS app actually sends the image in chunks of 1808 bytes. Currently the gatt version of the script is extremely slow on Linux, but if we increase this chunk size we might be able to reduce the waiting time by 50%. Worth a try.
