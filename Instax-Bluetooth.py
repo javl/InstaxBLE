@@ -7,10 +7,10 @@ from bleak import BleakScanner
 import socket
 
 
-class InstaxBle:
+class InstaxBluetooth:
     def __init__(self, deviceAddress=None, deviceName=None, printEnabled=False, printerName=None):
         """
-        Initialize the InstaxBle class.
+        Initialize the InstaxBluetooth class.
         printEnabled: by default, actual printing is disabled to prevent misprints.
         printerName: if specified, will only connect to a printer with this name.
         """
@@ -207,9 +207,9 @@ class InstaxBle:
 
 if __name__ == '__main__':
     # let the module search for the first instax printer it finds
-    # instax = InstaxBle()
+    # instax = InstaxBluetooth()
     # or specify your device address to skip searching
-    instax = InstaxBle(deviceAddress='88:B4:36:4E:20:CE')
+    instax = InstaxBluetooth(deviceAddress='88:B4:36:4E:20:CE')
 
     # uncomment the next line to enable actual printing
     # otherwise it will go through the whole printing process except

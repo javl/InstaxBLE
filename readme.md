@@ -1,6 +1,6 @@
 # Instax-Bluetooth
 
-<img align="right" style="margin:10px" src="https://github.com/javl/InstaxBLE/blob/main/instax-ble.gif?raw=true">
+<img align="right" style="margin:10px" src="https://github.com/javl/Instax-Bluetooth/blob/main/instax-bluetooth.gif?raw=true">
 
 ## Control your Instax Mini Link printer from Python
 
@@ -15,15 +15,15 @@ When connected to the Android version data is send over a socket: this works wel
 The IOS version of the Instax device uses `gatt` commands, which you can find in the (even more experimental) `gatt` branch in this repo. This works both on Linux and MacOS (not sure about Windows) but has a huge drawback on Linux. On connecting to the printer on MacOS the system and the printer will decice on a (high) transfer speed together, but on Linux you're stuck at the lowest transfer speed, meaning it can take up to a minute to send the image to the printer.
 
 ### Raspberry Pi
-When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `INSTAX-xxx(ANDROID)` device. However, I am able to connect to it if I enter the device address manually. 
+When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `INSTAX-xxx(ANDROID)` device. However, I am able to connect to it if I enter the device address manually.
 
 The `INSTAX-xxx(ANDROID)` and `INSTAX-xxx(IOS)` endpoints share part of their address: if you can find the address for the IOS endpoint it looks something like `FA:AB:BC:xx:xx:xx`, while the Android one looks like `88:B4:36:xx:xx:xx`. So if you can find one, just swap out the first 6 characters to get the other one.
 
 An alternative way to find it is via your Android phone: open the Instax app and connect to your printer,  then go to your phone's bluetooth settings and in the known devices list tap the gear next to the Instax device. It will show the device address (probably something like `88:B4:36:xx:xx:xx`) at the bottom of the screen. Make sure to disconnect / forget the device before connecting from another device.
-You can now enter this address directy when creating your `InstaxBLE` instance instead of having the script search for it:
+You can now enter this address directy when creating your `InstaxBluetooth` instance instead of having the script search for it:
 
-    instax = InstaxBLE(deviceAddress='88:B4:36:xx:xx:xx')
-    
+    instax = InstaxBluetooth(deviceAddress='88:B4:36:xx:xx:xx')
+
 
 
 ### Notes on usage
@@ -38,30 +38,30 @@ If you want to control one of the WiFi enabled Instax printers instead, you can 
 
 ### Installing and running
 
-    git clone https://github.com/javl/InstaxBLE.git
-    cd InstaxBle
+    git clone https://github.com/javl/instax-bluetooth.git
+    cd instax-bluetooth
     python3 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
-    python3 InstaxBLE.py
+    python3 instax-bluetooth.py
 
 ### Enable printing
 By default printing is disabled so you can test your code without the risk of accidental prints.
 To enable printing, call `instax.enable_printing()` or specify `printingEnabled=True` in the constructor.
 
-    instax = InstaxBle(enablePrinting=True)
+    instax = InstaxBluetooth(enablePrinting=True)
     # or
-    instax = InstaxBle()
+    instax = InstaxBluetooth()
     instax.enable_printing()
 
 ### Using a specific printer
-By default InstaxBle connects to the first printer it can find. You can specify the name of the printer you want to connect to in the constructor. Note: you need to use the device name that ends in `(Android)`, not `(IOS)`:
+By default InstaxBluetooth connects to the first printer it can find. You can specify the name of the printer you want to connect to in the constructor. Note: you need to use the device name that ends in `(Android)`, not `(IOS)`:
 
-    instax = InstaxBle(deviceName='Instax-12345678(Android)')
+    instax = InstaxBluetooth(deviceName='Instax-12345678(Android)')
 
 or specify the device address instead:
 
-    instax = InstaxBLE(deviceAddress='88:B4:36:xx:xx:xx')
+    instax = InstaxBluetooth(deviceAddress='88:B4:36:xx:xx:xx')
 
 
 
