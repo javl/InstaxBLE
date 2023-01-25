@@ -29,9 +29,7 @@ class InstaxBluetooth(InstaxPlatform):
         self.batteryState = None
         self.batteryPercentage = None
         self.printsLeft = None
-
-        # Call platform specific init
-        super(InstaxPlatform, self).__init__()
+        super().__init__()
 
     def enable_printing(self):
         """ Enable printing. """
