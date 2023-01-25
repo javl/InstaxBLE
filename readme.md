@@ -91,13 +91,20 @@ So for example, to make the LED blink blue:
     send_led_pattern(LedPatterns.blinkBLue, speed=5, repeat=255, when=0)
 
 
-## Possible updates:
+## Todo / Possible updates:
+
+The main branch uses sockets which only seem to work on Linux, while the GATT approach from the `gatt` branch works both on MacOS and Linux, but is extremely slow on the latter. So:
+- [ ] Alter main branch so that all socket/Linux specific code is pulled from a separate file
+- [ ] Allow loading a different method file for MacOS that uses GATT instead of sockets.
+- [ ] Check which one (if any) works on Windows?
+- [ ] Get rid of asyncio? Not sure if this is needed
+
 Printing process:
 - [ ] Currently both the socket and gatt version of this script send the image over in chunks of 900 bytes, like the Android app does. But the IOS app actually sends the image in chunks of 1808 bytes. Currently the gatt version of the script is extremely slow on Linux, but if we increase this chunk size we might be able to reduce the waiting time by 50%. Worth a try.
 
 Printer info:
-- [ ] Get battery level
-- [ ] Get number of photo's left in cartridge
+- [x] Get battery level
+- [x] Get number of photo's left in cartridge
 
 Image enhancements:
 - [ ] Auto rotate image to portrait before sending
