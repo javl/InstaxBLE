@@ -1,19 +1,26 @@
-#!/usr/bin/env python3
-
+#! /usr/bin/env python3
 from Types import EventType, InfoType
 from struct import pack, unpack_from
 import asyncio
 from bleak import BleakScanner
-import socket
+import sys
 
 
-class InstaxBluetooth:
+if sys.platform == 'linux':
+    from InstaxLinux import InstaxLinux as InstaxPlatform
+else:
+    from InstaxMacos import InstaxMacos as InstaxPlatform
+
+
+class InstaxBluetooth(InstaxPlatform):
     def __init__(self, deviceAddress=None, deviceName=None, printEnabled=False, printerName=None):
         """
         Initialize the InstaxBluetooth class.
         printEnabled: by default, actual printing is disabled to prevent misprints.
         printerName: if specified, will only connect to a printer with this name.
         """
+        # super(InstaxPlatform, self).__init__(*args, **kwargs)
+
         self.printEnabled = printEnabled
         self.isConnected = False
         self.device = None
@@ -22,31 +29,9 @@ class InstaxBluetooth:
         self.batteryState = None
         self.batteryPercentage = None
         self.printsLeft = None
-        self.sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 
-    def connect(self, timeout=0):
-        """ Connect to the printer. Quit trying after timeout seconds. """
-        self.isConnected = False
-        if self.deviceAddress is None:
-            self.device = asyncio.run(self.find_device(timeout=timeout))
-            if self.device:
-                print(f'found device {self.device.name}, connecting...')
-                self.deviceAddress = self.device.address
-            else:
-                print('no device found')
-                exit()
-
-        try:
-            print(f'connecting to device {self.deviceAddress}')
-            self.sock.connect((self.deviceAddress, 6))
-            self.isConnected = True
-            print('connected')
-        except Exception as e:
-            print(f'connection failed: {e}')
-
-    def close(self):
-        if self.isConnected:
-            self.sock.close()
+        # Call platform specific init
+        super(InstaxPlatform, self).__init__()
 
     def enable_printing(self):
         """ Enable printing. """
@@ -56,22 +41,22 @@ class InstaxBluetooth:
         """ Disable printing. """
         self.printEnabled = False
 
-    async def find_device(self, timeout=0, mode='ANDROID'):
-        """" Scan for our device and return it when found """
-        print('Looking for instax printer...')
-        secondsTried = 0
-        while True:
-            devices = await BleakScanner.discover(timeout=1)
-            for device in devices:
-                if (self.deviceName is None and device.name.startswith('INSTAX-')) or \
-                   device.name == self.deviceName or device.address == self.deviceAddress:
-                    if device.address.startswith('FA:AB:BC'):  # found the IOS endpoint, convert to ANDROID
-                        device.address = device.address.replace('FA:AB:BC', '88:B4:36')
-                        device.name = device.name.replace('IOS', 'ANDROID')
-                    return device
-            secondsTried += 1
-            if timeout != 0 and secondsTried >= timeout:
-                return None
+    # async def find_device(self, timeout=0, mode='ANDROID'):
+    #     """" Scan for our device and return it when found """
+    #     print('Looking for instax printer...')
+    #     secondsTried = 0
+    #     while True:
+    #         devices = await BleakScanner.discover(timeout=1)
+    #         for device in devices:
+    #             if (self.deviceName is None and device.name.startswith('INSTAX-')) or \
+    #                device.name == self.deviceName or device.address == self.deviceAddress:
+    #                 if device.address.startswith('FA:AB:BC'):  # found the IOS endpoint, convert to ANDROID
+    #                     device.address = device.address.replace('FA:AB:BC', '88:B4:36')
+    #                     device.name = device.name.replace('IOS', 'ANDROID')
+    #                 return device
+    #         secondsTried += 1
+    #         if timeout != 0 and secondsTried >= timeout:
+    #             return None
 
     def create_color_payload(self, colorArray, speed, repeat, when):
         """
@@ -122,30 +107,13 @@ class InstaxBluetooth:
         charging, number of prints left, etc. """
         packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, bytes([InfoType.BATTERY_INFO.value]))
         resp = self.send_packet(packet)
-        self.batteryState, self.batteryPercentage = unpack_from('>BB', resp[8:10])
+        self.parse_response(resp)
 
         packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, bytes([InfoType.PRINTER_FUNCTION_INFO.value]))
         resp = self.send_packet(packet)
-        dataByte = resp[8]
-        self.photosLeft = dataByte & 15
-        self.isCharging = (1 << 7) & dataByte >= 1
+        self.parse_response(resp)
 
-        print("battery level: ", self.batteryPercentage)
-        print('photos left: ', self.photosLeft)
-        print("battery state: ", self.batteryState)
-        print('charging: ', self.isCharging)
-
-    def send_packet(self, packet):
-        """ Send a packet to the printer. """
-        # print("sending: ", self.prettify_bytearray(packet))
-        if self.isConnected:
-            self.sock.send(packet)
-            # print('sent')
-            response = self.sock.recv(64)
-            # self.sock.close()
-            return response
-
-    # TODO: printer doesn't seem to respond to this
+    # TODO: printer doesn't seem to respond to this?
     # def shut_down(self):
     #     """ Shut down the printer. """
     #     packet = self.create_packet(EventType.SHUT_DOWN)
@@ -166,14 +134,14 @@ class InstaxBluetooth:
         """ print an image. Either pass a path to an image or a bytearray"""
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             imgData = self.image_to_bytes(imgSrc)
-        else:
+        else:  # the data passed is the image itself
             imgData = imgSrc
 
         printCommands = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData)))
         ]
 
-        # divide image data up into chunks of 900 bytes and pad the last chunk with zeroes if needed
+        # divide image data into chunks of 900 bytes and pad the last chunk with zeroes if needed
         imgDataChunks = [imgData[i:i + 900] for i in range(0, len(imgData), 900)]
         if len(imgDataChunks[-1]) < 900:
             imgDataChunks[-1] = imgDataChunks[-1] + bytes(900 - len(imgDataChunks[-1]))
@@ -195,17 +163,15 @@ class InstaxBluetooth:
             print(f'sending image packet {index+1}/{len(printCommands)}')
             self.send_packet(packet)
 
-    def get_accelerometer_data(self):
+    def get_accelerometer(self):
         """ Get accelerometer data from the printer. """
         packet = self.create_packet(EventType.XYZ_AXIS_INFO)
-        response = self.send_packet(packet)
-        header, length, op1, op2 = unpack_from('>HHBB', response)
-        if (op1, op2) == EventType.XYZ_AXIS_INFO.value:
-            x, y, z, o = unpack_from('<hhhB', response[6:-1])
-            print(f'x: {x}, y: {y}, z: {z}, o: {o}')
+        resp = self.send_packet(packet)
+        self.parse_response(resp)
 
 
-if __name__ == '__main__':
+def main():
+    """ Example usage of the Instax-Bluetooth module """
     # let the module search for the first instax printer it finds
     # instax = InstaxBluetooth()
     # or specify your device address to skip searching
@@ -220,5 +186,9 @@ if __name__ == '__main__':
         instax.send_led_pattern([[255, 0, 0], [0, 255, 0], [0, 0, 255]])
         # instax.print_image('example.jpg')
         instax.get_device_state()
-        # instax.get_accelerometer_data()
+        # instax.get_accelerometer()
         # instax.print_image('example.jpg')
+
+
+if __name__ == '__main__':
+    main()
