@@ -8,8 +8,11 @@ import sys
 
 if sys.platform == 'linux':
     from InstaxLinux import InstaxLinux as InstaxPlatform
-else:
+elif sys.platform == 'darwin':
+    import asyncio
     from InstaxMacos import InstaxMacos as InstaxPlatform
+else:
+    raise NotImplementedError(f'Platform ${sys.platform} not implemented')
 
 
 class InstaxBluetooth(InstaxPlatform):
@@ -189,4 +192,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if sys.platform == 'linux':
+        main()
+    elif sys.playform == 'darwin':
+        asyncio.run(main())
