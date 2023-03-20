@@ -20,6 +20,7 @@ Imgproc_COLOR_BGR2YUV_YV12 = 132
 
 
 class EventType (Enum):
+    """ Events we can send to the printer """
     UNKNOWN = (-1, -1)
     SUPPORT_FUNCTION_AND_VERSION_INFO = (0, 0)
     DEVICE_INFO_SERVICE = (0, 1)
@@ -84,3 +85,13 @@ class EventType (Enum):
     CAMERA_LOG_FILTER_START = (Imgproc_COLOR_BGR2YUV_YV12, 6)
     CAMERA_LOG_FILTER_DATA = (Imgproc_COLOR_BGR2YUV_YV12, 7)
     CAMERA_LOG_FILTER_CLEAR = (Imgproc_COLOR_BGR2YUV_YV12, 8)
+
+
+class InfoType (Enum):
+    """ Payload types to use with EventType.DEVICE_INFO_SERVICE """
+    IMAGE_SUPPORT_INFO = 0
+    BATTERY_INFO = 1
+    PRINTER_FUNCTION_INFO = 2
+    PRINT_HISTORY_INFO = 3
+    CAMERA_FUNCTION_INFO = 4
+    CAMERA_HISTORY_INFO = 5
