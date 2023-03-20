@@ -1,0 +1,37 @@
+notepad used during reverse engineering
+
+
+getting device info:
+  use EventType.SUPPORT_FUNCTION_INFO
+  as payload, use on of the following:
+    InfoType.IMAGE_SUPPORT_INFO;    // 1
+    InfoType.BATTERY_INFO;          // 2
+    InfoType.PRINTER_FUNCTION_INFO; // 3
+    InfoType.PRINT_HISTORY_INFO;    // 4
+    InfoType.CAMERA_FUNCTION_INFO;  // 5
+    InfoType.CAMERA_HISTORY_INFO;   // 6
+
+
+on getting BATTERY_INFO in reply:
+  response is four bytes <BBBB
+  battery state? 0-7
+  battery percentage? 0-100
+  something (unused?)
+  something (unused?)
+
+  f = mVar.mo9878f()
+  int i = f & 7;
+  if i is NOT 2 or 3, throw LOW_POWER_ERROR
+
+  it seems that if we're about to rpint and result == 1, we also throw this error (so you can use the camera to
+    a certain extend with low power, but you're not allowed to print?)
+
+
+this.photosLeft = (byte) (b & 15);
+this.f5568b = Integer.valueOf((b >> 4) & 7);
+this.isCharging = C1882e.f5764a.bitshiftAndCheckIfLargerThanZero(b, 7);
+
+
+Installing PyBluez:
+pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez
+
