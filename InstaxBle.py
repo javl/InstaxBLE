@@ -85,7 +85,7 @@ class InstaxBle:
         # print(f'  {self.prettify_bytearray(data)}')
 
     def connect(self, timeout=0):
-        """ Connect to the printer. Quit trying after timeout seconds. """
+        """ Connect to the printer. Stops trying after <timeout> seconds. """
         if not self.usePrinter:
             return
 
