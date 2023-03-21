@@ -7,9 +7,11 @@ import simplepyble
 import sys
 from time import sleep
 from math import ceil
+import argparse
 
 output = bytearray()
 output2 = bytearray()
+
 
 class InstaxBle:
     def __init__(self, deviceAddress=None, printEnabled=False):
@@ -81,6 +83,8 @@ class InstaxBle:
     def connect(self, timeout=0):
         """ Connect to the printer. Quit trying after timeout seconds. """
         # self.isConnected = False
+        if not usePrinter:
+            return
 
         self.peripheral = self.find_device(timeout=timeout)
         if self.peripheral:
@@ -108,6 +112,8 @@ class InstaxBle:
         # self.peripheral.notify(service_uuid, characteristic_uuid, notification_handler)
 
     def disconnect(self):
+        if not usePrinter:
+            return
         if self.peripheral:
             self.peripheral.disconnect()
 
@@ -190,10 +196,11 @@ class InstaxBle:
     def send_packet(self, packet, isDataPacket=False):
         """ Send a packet to the printer. """
         # print('------------------------------------------------------------')
-        if not self.peripheral:
-            print("no peripheral to send packet to")
-        if not self.peripheral.is_connected():
-            print("peripheral not connected")
+        if usePrinter:
+            if not self.peripheral:
+                print("no peripheral to send packet to")
+            if not self.peripheral.is_connected():
+                print("peripheral not connected")
         # self.peripheral.write_command(self.writeCharUUID, packet)
         # print('sending, MTU: ', self.peripheral.mtu())
         # print('sending: ', type(packet), packet[0:40])
@@ -207,8 +214,9 @@ class InstaxBle:
                 pass
 
             print('sending type: ', event)
-            self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, packet)
-            self.waitingForResponse = True
+            if usePrinter:
+                self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, packet)
+                self.waitingForResponse = True
             while self.waitingForResponse:
                 sleep(0.1)
 
@@ -225,8 +233,10 @@ class InstaxBle:
                     output += subPacket[:-1]
                 else:
                     output += subPacket
-                self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
-            self.waitingForResponse = True
+                if usePrinter:
+                    self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
+            if usePrinter:
+                self.waitingForResponse = True
 
     # TODO: printer doesn't seem to respond to this
     # async def shut_down(self):
@@ -327,11 +337,7 @@ class InstaxBle:
             print(f"{i}: {service_uuid} {characteristic}")
 
 
-instax = None
-
-
-def main():
-    global instax
+def main(fakePrinter=False):
     # instax = InstaxBle(deviceAddress='88:B4:36:4E:20:CE')
     instax = InstaxBle(deviceAddress='FA:AB:BC:4E:20:CE')
     # instax.enable_printing()  # uncomment this line to enable actual printing
@@ -353,5 +359,10 @@ def main():
     instax.disconnect()
 
 
+usePrinter = False
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--dummy', action='store_true')
+    args = parser.parse_args()
+    usePrinter = not args.dummy
     main()
