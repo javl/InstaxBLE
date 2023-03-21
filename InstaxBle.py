@@ -8,6 +8,8 @@ import sys
 from time import sleep
 from math import ceil
 
+output = bytearray()
+output2 = bytearray()
 
 class InstaxBle:
     def __init__(self, deviceAddress=None, printEnabled=False):
@@ -37,9 +39,9 @@ class InstaxBle:
 
     def notification_handler(self, packet):
         # print('====================================')
-        print('NOTIFICATION HANDLER')
-        print(f'\t{packet}')
-        print(f'\t{self.prettify_bytearray(packet)}')
+        # print('NOTIFICATION HANDLER')
+        # print(f'\t{packet}')
+        # print(f'\t{self.prettify_bytearray(packet)}')
         if len(packet) < 8:
             print(f"\tError: response packet size should be >= 8 (was {len(packet)})!")
         elif not self.validate_checksum(packet):
@@ -61,7 +63,7 @@ class InstaxBle:
         # else:
         try:
             event = EventType((op1, op2))
-            print('\tevent: ', event)
+            # print('\tevent: ', event)
         except Exception:
             print("\tUnknown event: ", (op1, op2))
 
@@ -195,43 +197,36 @@ class InstaxBle:
         # self.peripheral.write_command(self.writeCharUUID, packet)
         # print('sending, MTU: ', self.peripheral.mtu())
         # print('sending: ', type(packet), packet[0:40])
-        header, length, op1, op2 = unpack_from('<HHBB', packet)
-
-        # sleep(5)
-        # if op1 == 16 and len(self.packetsToSend) > 0:
-        #     print(f"notify: image data, packets left to send: {len(self.packetsToSend)}")
-        #     print("go send next packet: ", self.packetsToSend[0], self.prettify_bytearray(self.packetsToSend[0]))
-        #     nextPacket = self.packetsToSend.pop(0)
-        #     self.send_packet(nextPacket)
-
-        # else:
-        event = 'Unknown event'
-        try:
-            event = EventType((op1, op2))
-        except Exception:
-            if isDataPacket:
-                event = 'Image data'
-            pass
-
         if not isDataPacket:
+            print('is not DataPacket')
+            header, length, op1, op2 = unpack_from('<HHBB', packet)
+            event = 'Unknown event'
+            try:
+                event = EventType((op1, op2))
+            except Exception:
+                pass
+
+            print('sending type: ', event)
+            self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, packet)
             self.waitingForResponse = True
-
-        print('sending: ', event, self.prettify_bytearray(packet[0:30]))
-        self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, packet)
-
-        if isDataPacket:
-            print('don\'t wait for response, continue')
-            pass
-        else:
-            print('message send, wait for response...')
             while self.waitingForResponse:
                 sleep(0.1)
-            # print('response received, continue')
-        # print('------------------------------------------------------------')
-        # else:
-        #     print('sending write_request:')
-        #     print(self.peripheral.write_request(self.serviceUUID, self.writeCharUUID, packet))
-        # self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, packet)
+
+        else:
+            global output
+            print('isDataPacket')
+            # output += packet
+            numberOfParts = ceil(len(packet) / 182)
+            for subPartIndex in range(numberOfParts):
+                subPacket = packet[subPartIndex * 182:subPartIndex * 182 + 182]
+                if subPartIndex == 0:
+                    output += subPacket[10:]
+                elif subPartIndex == numberOfParts - 1:
+                    output += subPacket[:-1]
+                else:
+                    output += subPacket
+                self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
+            self.waitingForResponse = True
 
     # TODO: printer doesn't seem to respond to this
     # async def shut_down(self):
@@ -259,6 +254,9 @@ class InstaxBle:
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             imgData = self.image_to_bytes(imgSrc)
 
+        with open('output_from_orig.jpg', 'wb') as f:
+            f.write(imgData)
+
         packetsToSend = [(
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData))),
             False
@@ -266,30 +264,24 @@ class InstaxBle:
         # print('MTU: ', self.peripheral.mtu())
         # exit()
 
+        global output2
         # divide image data up into chunks of 900 bytes and pad the last chunk with 0s if needed
-        imgDataChunks = [imgData[i:i + 900] for i in range(0, len(imgData), 900)]
-        if len(imgDataChunks[-1]) < 900:
-            imgDataChunks[-1] = imgDataChunks[-1] + bytes(900 - len(imgDataChunks[-1]))
+        chunkSize = 900
+        imgDataChunks = [imgData[i:i + chunkSize] for i in range(0, len(imgData), chunkSize)]
+        if len(imgDataChunks[-1]) < chunkSize:
+            imgDataChunks[-1] = imgDataChunks[-1] + bytes(chunkSize - len(imgDataChunks[-1]))
 
+        # fromChunks = bytearray()
         for index, chunk in enumerate(imgDataChunks):
+            output2 += chunk
             imgDataChunks[index] = pack('>I', index) + chunk  # add chunk number as int (4 bytes)
+            packetsToSend.append((
+                self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, imgDataChunks[index]),
+                True
+            ))
 
-            chunkPacket = self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, imgDataChunks[index])
-            # print(chunkPacket)
-            for subPartIndex in range(ceil(len(chunkPacket) / 182)):
-                subPacket = chunkPacket[subPartIndex * 182:subPartIndex * 182 + 182]
-                if len(subPacket) == 0:
-                    break
-                if len(subPacket) < 182:
-                    subPacket = subPacket + bytes(182 - len(subPacket))
-                packetsToSend.append((
-                    subPacket,
-                    (subPartIndex != 9)
-                ))
-            # packetsToSend.append((
-            #     self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, imgDataChunks[index]),
-            #     False
-            # ))
+        with open('output_from_chunks.jpg', 'wb') as f:
+            f.write(output2)
 
         packetsToSend.append((
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_END),
@@ -315,7 +307,13 @@ class InstaxBle:
             while self.waitingForResponse:
                 sleep(.1)
         print("all image data sent")
-        sleep(1)  # allow the printer to respond to the last packet of our image
+        print('write to output')
+        with open('output_from_data.jpg', 'wb') as f:
+            f.write(output)
+
+        # allow the printer to respond to the last packet of our image before we
+        # exit our script
+        sleep(1)
 
     def print_services(self):
         print("Successfully connected, listing services...")
@@ -336,7 +334,7 @@ def main():
     global instax
     # instax = InstaxBle(deviceAddress='88:B4:36:4E:20:CE')
     instax = InstaxBle(deviceAddress='FA:AB:BC:4E:20:CE')
-    instax.enable_printing()  # uncomment this line to enable actual printing
+    # instax.enable_printing()  # uncomment this line to enable actual printing
     instax.connect()
     # print("Successfully connected, listing services...")
     # instax.print_services()
