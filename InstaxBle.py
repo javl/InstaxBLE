@@ -86,10 +86,6 @@ class InstaxBle:
         self.parse_response(packet)
         self.waitingForResponse = False
 
-        # data = packet[6:-1]  # the packet without headers and checksum
-        # print(f'Response data: {data} (length: {len(data)}, checksum OK)')
-        # print(f'  {self.prettify_bytearray(data)}')
-
     def connect(self, timeout=0):
         """ Connect to the printer. Stops trying after <timeout> seconds. """
         if not self.usePrinter:
@@ -141,7 +137,7 @@ class InstaxBle:
                     print(f"Found: {foundName} [{foundAddress}]")
                 if (self.deviceAddress is None and foundName.startswith('INSTAX-')) or \
                    foundAddress == self.deviceAddress:
-                    if foundAddress.startswith('FA:AB:BC'):  # found the IOS endpoint
+                    if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
                         # to convert to ANDROID endpoint, replace 'FA:AB:BC' to '88:B4:36')
                         if peripheral.is_connectable():
                             return peripheral
