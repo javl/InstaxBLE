@@ -105,10 +105,6 @@ class InstaxBle:
                 if not self.quiet:
                     print('error on attaching notification_handler: ', e)
 
-        # self.peripheral.connect()
-        # self.peripheral.notify(self.notifyUUID, self.notification_handler)
-        # self.peripheral.notify(service_uuid, characteristic_uuid, notification_handler)
-
     def disconnect(self):
         """ Disconnect from the printer (if connected) """
         if not self.usePrinter:
@@ -140,9 +136,7 @@ class InstaxBle:
                 if (self.deviceAddress is None and foundName.startswith('INSTAX-')) or \
                    foundAddress == self.deviceAddress:
                     if foundAddress.startswith('FA:AB:BC'):  # found the IOS endpoint
-                        # to convert to ANDROID endpoint:
-                        # foundName = foundName.replace('IOS', 'ANDROID')
-                        # foundAddress = foundAddress.replace('FA:AB:BC', '88:B4:36')
+                        # to convert to ANDROID endpoint, replace 'FA:AB:BC' to '88:B4:36')
                         if peripheral.is_connectable():
                             return peripheral
                         elif not self.quiet:
