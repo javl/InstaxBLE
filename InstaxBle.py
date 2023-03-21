@@ -54,6 +54,11 @@ class InstaxBle:
             print(f"Using the first one: {adapters[0].identifier()}")
         self.adapter = adapters[0]
 
+    def parse_response(self, packet):
+        """ Parse the response packet and print the result """
+        # todo: create parsers for the different types of responses
+        return
+
     def notification_handler(self, packet):
         """ Gets called whenever the printer replies and handles parsing the received data """
         if self.verbose:
@@ -63,7 +68,7 @@ class InstaxBle:
             if len(packet) < 8:
                 print(f"\tError: response packet size should be >= 8 (was {len(packet)})!")
             elif not self.validate_checksum(packet):
-                print("\tChecksum validation error!")
+                print("\tResponse packet checksum was invalid!")
 
         header, length, op1, op2 = unpack_from('<HHBB', packet)
         # print('\theader: ', header, '\t', self.prettify_bytearray(packet[0:2]))
@@ -78,6 +83,7 @@ class InstaxBle:
                 event = f"Unknown event: ({op1}, {op2})"
             print('\tevent: ', event)
 
+        self.parse_response(packet)
         self.waitingForResponse = False
 
         # data = packet[6:-1]  # the packet without headers and checksum
@@ -209,9 +215,6 @@ class InstaxBle:
         if event != EventType.PRINT_IMAGE_DOWNLOAD_DATA:
             if self.usePrinter:
                 self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, packet)
-                self.waitingForResponse = True
-                while self.waitingForResponse:
-                    sleep(0.1)
 
         else:  # PRINT_IMAGE_DOWNLOAD_DATA
             smallPacketSize = 182
@@ -223,17 +226,17 @@ class InstaxBle:
                         self.imageFromPackets += subPacket[10:]
                     elif subPartIndex == numberOfParts - 1:
                         self.imageFromPackets += subPacket[:-1]
-                        if self.usePrinter:
-                            self.waitingForResponse = True
                     else:
                         self.imageFromPackets += subPacket
+
                 if self.usePrinter:
                     self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
 
-            if self.usePrinter:
-                self.waitingForResponse = True
-        while self.waitingForResponse:
-            sleep(.1)
+        if self.usePrinter:
+            # wait for our notifier to update waitingForResponse
+            self.waitingForResponse = True
+            while self.waitingForResponse:
+                sleep(.1)
 
     # TODO: printer doesn't seem to respond to this?
     # async def shut_down(self):
