@@ -15,7 +15,6 @@ class InstaxBle:
                  device_address=None,
                  print_enabled=False,
                  use_printer=True,
-                 save_images=False,
                  verbose=False,
                  quiet=False):
         """
@@ -29,14 +28,6 @@ class InstaxBle:
         self.usePrinter = use_printer
         self.quiet = quiet
         self.verbose = verbose if not self.quiet else False
-        # enableing writing to images will store the image passed to print_image()
-        # to different bytearrays, based on where we are in the script, and
-        # will write the images to files when the script is finished.
-        self.saveImages = save_images
-        self.imageFromChunks = bytearray()
-        self.imageFromPackets = bytearray()
-        # self.service_uuid =
-        # self.characteristic_uuid =
         self.serviceUUID = '70954782-2d83-473d-9e5f-81e1d02d5273'
         self.writeCharUUID = '70954783-2d83-473d-9e5f-81e1d02d5273'
         self.notifyCharUUID = '70954784-2d83-473d-9e5f-81e1d02d5273'
@@ -61,6 +52,7 @@ class InstaxBle:
 
     def notification_handler(self, packet):
         """ Gets called whenever the printer replies and handles parsing the received data """
+        print('at handler')
         if self.verbose:
             print('Notification handler:')
             print(f'\t{self.prettify_bytearray(packet[:40])}')
@@ -71,10 +63,10 @@ class InstaxBle:
                 print("\tResponse packet checksum was invalid!")
 
         header, length, op1, op2 = unpack_from('<HHBB', packet)
-        # print('\theader: ', header, '\t', self.prettify_bytearray(packet[0:2]))
-        # print('\tlength: ', length, '\t', self.prettify_bytearray(packet[2:4]))
-        # print('\top1: ', op1, '\t\t', self.prettify_bytearray(packet[4:5]))
-        # print('\top2: ', op2, '\t\t', self.prettify_bytearray(packet[5:6]))
+        print('\theader: ', header, '\t', self.prettify_bytearray(packet[0:2]))
+        print('\tlength: ', length, '\t', self.prettify_bytearray(packet[2:4]))
+        print('\top1: ', op1, '\t\t', self.prettify_bytearray(packet[4:5]))
+        print('\top2: ', op2, '\t\t', self.prettify_bytearray(packet[5:6]))
 
         if self.verbose:
             try:
@@ -84,7 +76,12 @@ class InstaxBle:
             print('\tevent: ', event)
 
         self.parse_response(packet)
-        self.waitingForResponse = False
+        # self.waitingForResponse = False
+
+        print("packets to go: ", len(self.packetsForPrinting))
+        if len(self.packetsForPrinting) > 0:
+            packet = self.packetsForPrinting.pop(0)
+            self.send_packet(packet)
 
     def connect(self, timeout=0):
         """ Connect to the printer. Stops trying after <timeout> seconds. """
@@ -97,22 +94,30 @@ class InstaxBle:
                 if self.verbose:
                     print(f"\n\nConnecting to: {self.peripheral.identifier()} [{self.peripheral.address()}]")
                 self.peripheral.connect()
-                if self.peripheral.is_connected():
-                    if self.verbose:
-                        print(f"Connected (mtu: {self.peripheral.mtu()})")
-                        print('Attaching notification_handler')
-                    self.peripheral.notify(self.serviceUUID, self.notifyCharUUID, self.notification_handler)
-
             except Exception as e:
                 if not self.quiet:
-                    print('error on attaching notification_handler: ', e)
+                    print('error on connecting: ', e)
+
+            if self.peripheral.is_connected():
+                if self.verbose:
+                    print(f"Connected (mtu: {self.peripheral.mtu()})")
+                    print('Attaching notification_handler')
+                try:
+                    self.peripheral.notify(self.serviceUUID, self.notifyCharUUID, self.notification_handler)
+                except Exception as e:
+                    if not self.quiet:
+                        print('error on attaching notification_handler: ', e)
 
     def disconnect(self):
         """ Disconnect from the printer (if connected) """
+        print('at disconnect')
         if not self.usePrinter:
             return
         if self.peripheral:
-            self.peripheral.disconnect()
+            print('start disconnect')
+            if self.peripheral.is_connected():
+                self.peripheral.disconnect()
+            print('disconnect done')
 
     def enable_printing(self):
         """ Enable printing. """
@@ -179,7 +184,7 @@ class InstaxBle:
         if isinstance(eventType, EventType):  # allows passing in an event or a value directly
             eventType = eventType.value
 
-        header = b'\x41\x62'  # 'Ab' means from client to printer, responses from printer start with 'Ba'
+        header = b'\x41\x62'  # 'Ab' means from client to printer, responses from printer start with 'aB'
         opCode = bytes([eventType[0], eventType[1]])
         packetSize = pack('>H', 7 + len(payload))
         packet = header + packetSize + opCode + payload
@@ -210,29 +215,30 @@ class InstaxBle:
         # print('sending: ', type(packet), packet[0:40])
         if event != EventType.PRINT_IMAGE_DOWNLOAD_DATA:
             if self.usePrinter:
+                print('send non image_download_data')
                 self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, packet)
-
         else:  # PRINT_IMAGE_DOWNLOAD_DATA
             smallPacketSize = 182
             numberOfParts = ceil(len(packet) / smallPacketSize)
+            print("number of packets to send: ", numberOfParts)
             for subPartIndex in range(numberOfParts):
+                print((subPartIndex + 1), '/', numberOfParts)
                 subPacket = packet[subPartIndex * smallPacketSize:subPartIndex * smallPacketSize + smallPacketSize]
-                if self.saveImages:
-                    if subPartIndex == 0:
-                        self.imageFromPackets += subPacket[10:]
-                    elif subPartIndex == numberOfParts - 1:
-                        self.imageFromPackets += subPacket[:-1]
-                    else:
-                        self.imageFromPackets += subPacket
 
                 if self.usePrinter:
+                    print(subPacket)
                     self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
-
-        if self.usePrinter:
-            # wait for our notifier to update waitingForResponse
-            self.waitingForResponse = True
-            while self.waitingForResponse:
-                sleep(.1)
+            # print('send image data: ', end='')
+            # for iteration in range(ceil(len(packet)/smallPacketSize)):
+            #     subPacket = packet[iteration * smallPacketSize:iteration * smallPacketSize + smallPacketSize]
+            #     if self.usePrinter:
+            #         print('.', end='')
+            #         self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
+            #         # sleep(0.1)
+            # subPacket = packet[smallPacketSize * 9:]
+            # if self.usePrinter:
+            #     self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
+            print('done')
 
     # TODO: printer doesn't seem to respond to this?
     # async def shut_down(self):
@@ -261,16 +267,13 @@ class InstaxBle:
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             imgData = self.image_to_bytes(imgSrc)
 
-        if self.saveImages:
-            with open('output_from_orig.jpg', 'wb') as f:
-                f.write(imgData)
-
-        packetsForPrinting = [
+        self.packetsForPrinting = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData)))
         ]
+
         # divide image data up into chunks of <chunkSize> bytes and pad the last chunk with zeroes if needed
         # chunkSize = 900
-        chunkSize = 1808
+        chunkSize = 900
         imgDataChunks = [imgData[i:i + chunkSize] for i in range(0, len(imgData), chunkSize)]
         if len(imgDataChunks[-1]) < chunkSize:
             imgDataChunks[-1] = imgDataChunks[-1] + bytes(chunkSize - len(imgDataChunks[-1]))
@@ -278,35 +281,31 @@ class InstaxBle:
         # create a packet from each of our chunks, this includes adding the chunk number
         for index, chunk in enumerate(imgDataChunks):
             imgDataChunks[index] = pack('>I', index) + chunk  # add chunk number as int (4 bytes)
-            packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, imgDataChunks[index]))
+            self.packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_DATA, imgDataChunks[index]))
 
-            if self.saveImages:
-                self.imageFromChunks += chunk
-
-        if self.saveImages:
-            with open('output_from_chunks.jpg', 'wb') as f:
-                f.write(self.imageFromChunks)
-
-        packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_END))
+        self.packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_END))
 
         if self.printEnabled:
-            packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE))
-            packetsForPrinting.append(self.create_packet((0, 2), b'\x02'))
+            self.packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE))
+            self.packetsForPrinting.append(self.create_packet((0, 2), b'\x02'))
         elif not self.quiet:
             print("Printing is disabled, sending all packets except the actual print command")
 
-        # loop over our list of packets and send them one by one. Waiting between packets
-        # is handled by send_packet()
-        while len(packetsForPrinting) > 0:
-            self.send_packet(packetsForPrinting.pop(0))
+        # for packet in self.packetsForPrinting:
+        #     print(self.prettify_bytearray(packet))
+        # exit()
+        # send the first packet from our list, the packet handler will take care of the rest
 
-        if self.saveImages:
-            with open('output_from_packets.jpg', 'wb') as f:
-                f.write(self.imageFromPackets)
+        if self.usePrinter:
+            packet = self.packetsForPrinting.pop(0)
+            self.send_packet(packet)
+            print("entering wait loop")
+            try:
+                while len(self.packetsForPrinting) > 0:
+                    sleep(0.1)
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
 
-        # wait for a bit so the printer has time to respond to our last packet before
-        # we exit our script and disconnect
-        sleep(1)
 
     def print_services(self):
         """ Get and display and overview of the printer's services and characteristics """
@@ -321,28 +320,43 @@ class InstaxBle:
         for i, (service_uuid, characteristic) in enumerate(service_characteristic_pair):
             print(f"{i}: {service_uuid} {characteristic}")
 
+    def get_function_info(self):
+        """ Get and display the printer's function info """
+        if self.verbose:
+            print("Getting function info...")
+        packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, b'0x02')
+        self.send_packet(packet)
+
 
 def main(args={}):
     """ Main script used as an example of how to control the printer """
     args['device_address'] = 'FA:AB:BC:4E:20:CE'
     instax = InstaxBle(**args)
-    # instax.enable_printing()  # uncomment this line to enable actual printing
-    instax.connect()
-    # print("Successfully connected, listing services...")
-    # instax.print_services()
-    # instax.send_led_pattern(LedPatterns.blinkBlue)
-    # while instax.waitingForResponse:
-    #     sleep(5)
-    # instax.send_led_pattern(LedPatterns.pulseGreen)
-    # while instax.waitingForResponse:
-    #     sleep(5)
-    # instax.send_led_pattern(LedPatterns.blinkRGB)
-    # while instax.waitingForResponse:
-    #     sleep(5)
-    # instax.print_services()
-    instax.print_image('example.jpg')
-    # instax.print_image('moos.jpeg')
-    instax.disconnect()
+    try:
+        # instax.enable_printing()  # uncomment this line to enable actual printing
+        instax.connect()
+        # instax.get_function_info()
+        # print("Successfully connected, listing services...")
+        # instax.print_services()
+
+        # instax.send_led_pattern(LedPatterns.blinkBlue)
+        # while instax.waitingForResponse:
+        #     print('waiting')
+        # sleep(5)
+        # instax.send_led_pattern(LedPatterns.pulseGreen)
+        # while instax.waitingForResponse:
+        #     sleep(5)
+        # instax.send_led_pattern(LedPatterns.blinkRGB)
+        # sleep(5)
+        # while instax.waitingForResponse:
+        #     sleep(5)
+        # instax.print_services()
+        # instax.print_image('moos.jpeg')
+        instax.print_image('parsed_img.jpg')
+        print('after print image, start paus')
+        instax.disconnect()
+    except Exception:
+        instax.disconnect()
 
 
 if __name__ == '__main__':
@@ -350,8 +364,14 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--device-address')
     parser.add_argument('-p', '--print-enabled', action='store_true')
     parser.add_argument('-d', '--use-printer', action='store_false')
-    parser.add_argument('-s', '--save-images', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-q', '--quiet', action='store_true')
     args = parser.parse_args()
+
     main(vars(args))
+    # signal.pause()
+    # loop = asyncio.get_event_loop()
+    # try:
+    #     loop.run_forever()
+    # finally:
+    #     loop.close()
