@@ -1,3 +1,1 @@
-async-timeout==4.0.2
-bleak==0.19.5
-dbus-fast==1.82.0
+simplepyble==0.6.1
