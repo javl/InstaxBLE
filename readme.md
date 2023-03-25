@@ -4,18 +4,23 @@
 
 ## Control your Instax Mini Link printer from Python
 
-This Python module can be used to control your Instax bluetooth printer. Only tested with the Instax Mini Link, but it should also work with other bluetooth Instax models (though you might have to experiment with the image size when using the Square or Wide models).
+**Note: this readme is outdated and is being updated as we speak**
 
-This is a 100% certified Alpha state project: the code is working, but it's far from being finished or polished. Create an issue if you run into any trouble (but please read the rest of this readme first).
+This Python module can be used to control your Instax bluetooth printer. I've only been able to test with the Instax Mini Link, but it should also work with other bluetooth Instax models (though you might have to experiment when using the Square or Wide models).
+
+Create an issue if you run into any trouble (but please read the rest of this readme first).
 
 ### Useful to know
+These printers advertise themselves with a device name like `INSTAX-xxxxxxxx`. By default, this script will connect to the first printer it can find. If you have multiple printers, you can specify the name of the printer you want to connect to in the constructor.
+
+    instax = InstaxBle(deviceName='Instax-12345678(Android)')
 These printers advertise themselves as two separate bluetooth periphials: `INSTAX-xxxxxxxx(IOS)` and `INSTAX-xxxxxxxx(ANDROID)` (where the x's are a unique number for your device).
 When connected to the Android version data is send over a socket: this works well on Linux but I don't think this works on Windows or MacOS. Currently the code in the `main` branch of this repo uses this and so will only work on Linux based systems.
 
 The IOS version of the Instax device uses `gatt` commands, which you can find in the (even more experimental) `gatt` branch in this repo. This works both on Linux and MacOS (not sure about Windows) but has a huge drawback on Linux. On connecting to the printer on MacOS the system and the printer will decice on a (high) transfer speed together, but on Linux you're stuck at the lowest transfer speed, meaning it can take up to a minute to send the image to the printer.
 
 ### Raspberry Pi
-When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `INSTAX-xxx(ANDROID)` device. However, I am able to connect to it if I enter the device address manually. 
+When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `INSTAX-xxx(ANDROID)` device. However, I am able to connect to it if I enter the device address manually.
 
 The `INSTAX-xxx(ANDROID)` and `INSTAX-xxx(IOS)` endpoints share part of their address: if you can find the address for the IOS endpoint it looks something like `FA:AB:BC:xx:xx:xx`, while the Android one looks like `88:B4:36:xx:xx:xx`. So if you can find one, just swap out the first 6 characters to get the other one.
 
@@ -23,7 +28,7 @@ An alternative way to find it is via your Android phone: open the Instax app and
 You can now enter this address directy when creating your `InstaxBLE` instance instead of having the script search for it:
 
     instax = InstaxBLE(deviceAddress='88:B4:36:xx:xx:xx')
-    
+
 
 
 ### Notes on usage
