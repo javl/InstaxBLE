@@ -32,7 +32,6 @@ class InstaxBle:
         self.writeCharUUID = '70954783-2d83-473d-9e5f-81e1d02d5273'
         self.notifyCharUUID = '70954784-2d83-473d-9e5f-81e1d02d5273'
         self.packetsForPrinting = []
-        self.waitingForResponse = False
 
         adapters = simplepyble.Adapter.get_adapters()
         if len(adapters) == 0:
@@ -40,6 +39,7 @@ class InstaxBle:
                 sys.exit("No bluetooth adapters found (are they enabled?)")
             else:
                 sys.exit()
+
         if len(adapters) > 1 and self.verbose:
             print(f"Found multiple adapters: {', '.join([adapter.identifier() for adapter in adapters])}")
             print(f"Using the first one: {adapters[0].identifier()}")
@@ -48,11 +48,11 @@ class InstaxBle:
     def parse_response(self, packet):
         """ Parse the response packet and print the result """
         # todo: create parsers for the different types of responses
+        # Placeholder for a later update
         return
 
     def notification_handler(self, packet):
         """ Gets called whenever the printer replies and handles parsing the received data """
-        print('at handler')
         if self.verbose:
             print('Notification handler:')
             print(f'\t{self.prettify_bytearray(packet[:40])}')
@@ -77,7 +77,6 @@ class InstaxBle:
 
         self.parse_response(packet)
 
-        print("packets to go: ", len(self.packetsForPrinting))
         if len(self.packetsForPrinting) > 0:
             packet = self.packetsForPrinting.pop(0)
             self.send_packet(packet)
@@ -109,14 +108,13 @@ class InstaxBle:
 
     def disconnect(self):
         """ Disconnect from the printer (if connected) """
-        print('at disconnect')
         if self.dummyPrinter:
             return
         if self.peripheral:
-            print('start disconnect')
             if self.peripheral.is_connected():
+                if self.verbose:
+                    print('Disconnecting...')
                 self.peripheral.disconnect()
-            print('disconnect done')
 
     def enable_printing(self):
         """ Enable printing. """
@@ -140,9 +138,9 @@ class InstaxBle:
                 if self.verbose:
                     print(f"Found: {foundName} [{foundAddress}]")
                 if (self.deviceAddress is None and foundName.startswith('INSTAX-')) or \
-                   foundAddress == self.deviceAddress:
+                    foundAddress == self.deviceAddress:
                     if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
-                        # to convert to ANDROID endpoint, replace 'FA:AB:BC' to '88:B4:36')
+                        # to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
                         if peripheral.is_connectable():
                             return peripheral
                         elif not self.quiet:
