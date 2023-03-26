@@ -8,6 +8,16 @@ This module can be used to control your Instax bluetooth printer from Python. I'
 
 Create an issue if you run into any trouble, but please read the rest of this readme first.
 
+### Installing and running
+
+    git clone https://github.com/javl/InstaxBLE.git
+    cd InstaxBle
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    python3 InstaxBLE.py
+
+
 ### Useful to know
 
 #### 1. Printing is disabled by default
@@ -52,15 +62,6 @@ It's recommended to wrap your code inside a `try ... catch` loop so you can catc
 2. The script does not yet check if your image is the right size or orientation. I've tested printing with images that are 600x800 pixels and don't know what happens when you send your image in landscape orientation so you might want to rotate it beforehand.
 3. Your image should be 65535 bytes or less.
 4. For faster (and possibly more reliable) printing remove any exifdata from your image. This will reduce the amount of data that needs to be send to the device. This also leaves more space for the image itself.
-
-### Installing and running
-
-    git clone https://github.com/javl/InstaxBLE.git
-    cd InstaxBle
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    python3 InstaxBLE.py
 
 ## Todo / Possible updates:
 
