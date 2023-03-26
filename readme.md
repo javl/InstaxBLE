@@ -8,6 +8,16 @@ This module can be used to control your Instax bluetooth printer from Python. I'
 
 Create an issue if you run into any trouble, but please read the rest of this readme first.
 
+Did you find this script useful? Feel free to support my open source software:
+
+![GitHub Sponsor](https://img.shields.io/github/sponsors/javl?label=Sponsor&logo=GitHub)
+
+### Supported printer models
+I've only been able to test the script with the `Instax Mini Link`, as that is the model I have, but it should also work with the `Instax Mini Link 2`, as well as the `Instax Mini LiPlay` camera. Some changes might be needed for the `Instax Wide` and `Instax Square` models though. @Fijifilm: feel free to send some of your other models my way ;)
+
+If you have a different model let met know if this code works for you. If it doesn't you can find some info on recording the bluetooth data between your phone and the printer [here (Android)](https://github.com/javl/InstaxBLE/issues/4#issuecomment-1484123671) and [here (IOS)](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-751651250).
+
+
 ### Installing and running
 
     git clone https://github.com/javl/InstaxBLE.git
