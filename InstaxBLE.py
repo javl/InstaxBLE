@@ -25,7 +25,7 @@ class InstaxBLE:
         """
         self.printEnabled = print_enabled
         self.peripheral = None
-        self.deviceName = device_name
+        self.deviceName = device_name.upper() if device_name else None
         self.deviceAddress = device_address
         self.dummyPrinter = dummy_printer
         self.quiet = quiet
@@ -139,16 +139,16 @@ class InstaxBLE:
                 foundAddress = peripheral.address()
                 if self.verbose:
                     print(f"Found: {foundName} [{foundAddress}]")
-                    print('looking for: ', self.deviceName)
-                if (self.deviceName and foundName.startswith(self.deviceName.upper())) or \
+                if (self.deviceName and foundName.startswith(self.deviceName)) or \
                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
-                   (self.deviceName is None and self.deviceAddress is None and foundName.startswith('INSTAX-')):
-                    if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
-                        # to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
-                        if peripheral.is_connectable():
-                            return peripheral
-                        elif not self.quiet:
-                            print(f"Printer at {foundAddress} is not connectable")
+                   (self.deviceName is None and self.deviceAddress is None and \
+                   foundName.startswith('INSTAX-') and foundName.endswith('(IOS))')):
+                    # if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
+                    #     to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
+                    if peripheral.is_connectable():
+                        return peripheral
+                    elif not self.quiet:
+                        print(f"Printer at {foundAddress} is not connectable")
             secondsTried += 1
             if timeout != 0 and secondsTried >= timeout:
                 return None
