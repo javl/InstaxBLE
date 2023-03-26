@@ -139,7 +139,7 @@ class InstaxBLE:
                 foundAddress = peripheral.address()
                 if self.verbose:
                     print(f"Found: {foundName} [{foundAddress}]")
-                if (self.deviceName and foundName.startsWith(self.deviceName.upper())) or \
+                if (self.deviceName and foundName.startswith(self.deviceName.upper())) or \
                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
                    (self.deviceName is None and self.deviceAddress is None and foundName.startswith('INSTAX-')):
                     if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
