@@ -67,11 +67,12 @@ It's recommended to wrap your code inside a `try ... catch` loop so you can catc
 
 #### Testing:
 - [x] Test on Linux
-- [ ] Test on Raspberry Pi
 - [x] Test on MacOS
+- [ ] Test on Raspberry Pi
 - [ ] Test on Windows
 
 #### Printer info:
+Some of these options have already been explored in other branches, but I need to bring them into the main branch.
 - [ ] Get battery level
 - [ ] Get number of photo's left in cartridge
 - [ ] Get accelerometer data
