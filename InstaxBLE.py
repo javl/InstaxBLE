@@ -199,7 +199,6 @@ class InstaxBLE:
 
     def send_packet(self, packet):
         """ Send a packet to the printer """
-        print("go send")
         if not self.dummyPrinter and not self.quiet:
             if not self.peripheral:
                 print("no peripheral to send packet to")
@@ -217,9 +216,11 @@ class InstaxBLE:
 
         smallPacketSize = 182
         numberOfParts = ceil(len(packet) / smallPacketSize)
-        print("number of packets to send: ", numberOfParts)
+        if self.verbose:
+            print("number of packets to send: ", numberOfParts)
         for subPartIndex in range(numberOfParts):
-            print((subPartIndex + 1), '/', numberOfParts)
+            if self.verbose:
+                print((subPartIndex + 1), '/', numberOfParts)
             subPacket = packet[subPartIndex * smallPacketSize:subPartIndex * smallPacketSize + smallPacketSize]
 
             if not self.dummyPrinter:
