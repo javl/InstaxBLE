@@ -68,7 +68,7 @@ It's recommended to wrap your code inside a `try ... catch` loop so you can catc
 #### Testing:
 - [x] Test on Linux
 - [ ] Test on Raspberry Pi
-- [ ] Test on MacOS
+- [x] Test on MacOS
 - [ ] Test on Windows
 
 #### Printer info:
