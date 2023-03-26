@@ -80,6 +80,8 @@ class InstaxBLE:
         self.parse_response(packet)
 
         if len(self.packetsForPrinting) > 0:
+            if self.verbose:
+                print('Packets left to send: ', len(self.packetsForPrinting))
             packet = self.packetsForPrinting.pop(0)
             self.send_packet(packet)
 
@@ -215,11 +217,11 @@ class InstaxBLE:
 
         smallPacketSize = 182
         numberOfParts = ceil(len(packet) / smallPacketSize)
-        if self.verbose:
-            print("number of packets to send: ", numberOfParts)
+        # if self.verbose:
+        #     print("number of packets to send: ", numberOfParts)
         for subPartIndex in range(numberOfParts):
-            if self.verbose:
-                print((subPartIndex + 1), '/', numberOfParts)
+            # if self.verbose:
+            #     print((subPartIndex + 1), '/', numberOfParts)
             subPacket = packet[subPartIndex * smallPacketSize:subPartIndex * smallPacketSize + smallPacketSize]
 
             if not self.dummyPrinter:
