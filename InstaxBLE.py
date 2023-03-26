@@ -10,7 +10,7 @@ import simplepyble
 import sys
 
 
-class InstaxBle:
+class InstaxBLE:
     def __init__(self,
                  device_address=None,
                  device_name=None,
@@ -19,7 +19,7 @@ class InstaxBle:
                  verbose=False,
                  quiet=False):
         """
-        Initialize the InstaxBle class.
+        Initialize the InstaxBLE class.
         deviceAddress: if specified, will only connect to a printer with this address.
         printEnabled: by default, actual printing is disabled to prevent misprints.
         """
@@ -312,8 +312,8 @@ class InstaxBle:
 
 
 def main(args={}):
-    """ Example usage of the InstaxBle class """
-    instax = InstaxBle(**args)
+    """ Example usage of the InstaxBLE class """
+    instax = InstaxBLE(**args)
     try:
         # By default the final print command does not get send to the printer
         # Uncomment the next line, or pass --print-enabled when calling the script
