@@ -13,6 +13,7 @@ import sys
 class InstaxBle:
     def __init__(self,
                  device_address=None,
+                 device_name=None,
                  print_enabled=False,
                  dummy_printer=True,
                  verbose=False,
@@ -24,6 +25,7 @@ class InstaxBle:
         """
         self.printEnabled = print_enabled
         self.peripheral = None
+        self.deviceName = device_name
         self.deviceAddress = device_address
         self.dummyPrinter = dummy_printer
         self.quiet = quiet
@@ -137,8 +139,9 @@ class InstaxBle:
                 foundAddress = peripheral.address()
                 if self.verbose:
                     print(f"Found: {foundName} [{foundAddress}]")
-                if (self.deviceAddress is None and foundName.startswith('INSTAX-')) or \
-                    foundAddress == self.deviceAddress:
+                if (self.deviceName and foundName.startsWith(self.deviceName.upper())) or \
+                   (self.deviceAddress and foundAddress == self.deviceAddress) or \
+                   (self.deviceName is None and self.deviceAddress is None and foundName.startswith('INSTAX-')):
                     if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
                         # to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
                         if peripheral.is_connectable():
@@ -309,7 +312,7 @@ class InstaxBle:
 
 
 def main(args={}):
-    """ Main script used as an example of how to control the printer """
+    """ Example usage of the InstaxBle class """
     instax = InstaxBle(**args)
     try:
         # By default the final print command does not get send to the printer
@@ -342,6 +345,7 @@ def main(args={}):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--device-address')
+    parser.add_argument('-n', '--device-name')
     parser.add_argument('-p', '--print-enabled', action='store_true')
     parser.add_argument('-d', '--dummy-printer', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
