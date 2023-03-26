@@ -170,7 +170,6 @@ class InstaxBLE:
             when: 0 = normal, 1 = on print, 2 = on print completion, 3 = pattern switch """
         payload = self.create_color_payload(pattern, speed, repeat, when)
         packet = self.create_packet(EventType.LED_PATTERN_SETTINGS, payload)
-        print("size: ", len(packet))
         self.send_packet(packet)
 
     def prettify_bytearray(self, value):
