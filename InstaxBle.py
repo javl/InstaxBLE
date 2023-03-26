@@ -333,12 +333,10 @@ def main(args={}):
         # send the image (.jpg) to the printer
         instax.print_image('example.jpg')
 
+    except Exception as e:
+        print('Error: ', e)
+    finally:
         # all done, disconnect
-        instax.disconnect()
-
-    except Exception:
-        # when something goes wrong try to disconnect before exiting, otherwise
-        # you might have to restart the printer before you can connect again
         instax.disconnect()
 
 
