@@ -4,37 +4,19 @@
 
 ## Control your Instax Mini Link printer from Python
 
-This Python module can be used to control your Instax bluetooth printer. Only tested with the Instax Mini Link, but it should also work with other bluetooth Instax models (though you might have to experiment with the image size when using the Square or Wide models).
+This module can be used to control your Instax bluetooth printer from Python. I've only been able to test with the Instax Mini Link, but it should also work with other bluetooth Instax models, though you might have to experiment when using the Square or Wide models.
 
-This is a 100% certified Alpha state project: the code is working, but it's far from being finished or polished. Create an issue if you run into any trouble (but please read the rest of this readme first).
+Create an issue if you run into any trouble, but please read the rest of this readme first.
 
-### Useful to know
-These printers advertise themselves as two separate bluetooth periphials: `INSTAX-xxxxxxxx(IOS)` and `INSTAX-xxxxxxxx(ANDROID)` (where the x's are a unique number for your device).
-When connected to the Android version data is send over a socket: this works well on Linux but I don't think this works on Windows or MacOS. Currently the code in the `main` branch of this repo uses this and so will only work on Linux based systems.
+Did you find this script useful? Feel free to support my open source software:
 
-The IOS version of the Instax device uses `gatt` commands, which you can find in the (even more experimental) `gatt` branch in this repo. This works both on Linux and MacOS (not sure about Windows) but has a huge drawback on Linux. On connecting to the printer on MacOS the system and the printer will decice on a (high) transfer speed together, but on Linux you're stuck at the lowest transfer speed, meaning it can take up to a minute to send the image to the printer.
+![GitHub Sponsor](https://img.shields.io/github/sponsors/javl?label=Sponsor&logo=GitHub)
 
-### Raspberry Pi
-When scanning for bluetooth devices my Raspberry Pi 3 seems unable to find the `INSTAX-xxx(ANDROID)` device. However, I am able to connect to it if I enter the device address manually.
+### Supported printer models
+I've only been able to test the script with the `Instax Mini Link`, as that is the model I have, but it should also work with the `Instax Mini Link 2`, as well as the `Instax Mini LiPlay` camera. Some changes might be needed for the `Instax Wide` and `Instax Square` models though. @Fijifilm: feel free to send some of your other models my way ;)
 
-The `INSTAX-xxx(ANDROID)` and `INSTAX-xxx(IOS)` endpoints share part of their address: if you can find the address for the IOS endpoint it looks something like `FA:AB:BC:xx:xx:xx`, while the Android one looks like `88:B4:36:xx:xx:xx`. So if you can find one, just swap out the first 6 characters to get the other one.
+If you have a different model let met know if this code works for you. If it doesn't you can find some info on recording the bluetooth data between your phone and the printer [here (Android)](https://github.com/javl/InstaxBLE/issues/4#issuecomment-1484123671) and [here (IOS)](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-751651250).
 
-An alternative way to find it is via your Android phone: open the Instax app and connect to your printer,  then go to your phone's bluetooth settings and in the known devices list tap the gear next to the Instax device. It will show the device address (probably something like `88:B4:36:xx:xx:xx`) at the bottom of the screen. Make sure to disconnect / forget the device before connecting from another device.
-You can now enter this address directy when creating your `InstaxBluetooth` instance instead of having the script search for it:
-
-    instax = InstaxBluetooth(deviceAddress='88:B4:36:xx:xx:xx')
-
-
-
-### Notes on usage
-
-* The printer only works with .jpg images. I haven't actually tested this, but the printer code seems to suggest this.
-* The script does not yet check if your image is the right size or orientation. I've tested printing with images that are 600x800 pixels and don't know what happens when you send your image in landscape orientation so you might want to rotate it beforehand.
-* For faster (and possibly more reliable) printing remove any exifdata from your image. This will reduce the amount of data that needs to be send to the device.
-* Your image should be 65535 bytes or less.
-
-### Wifi
-If you want to control one of the WiFi enabled Instax printers instead, you can use [Instax-api](https://github.com/jpwsutton/instax_api). This script borrows heavily from notes and ideas shared in [this instax-api thread](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-1352639100).
 
 ### Installing and running
 
@@ -45,72 +27,79 @@ If you want to control one of the WiFi enabled Instax printers instead, you can 
     pip install -r requirements.txt
     python3 instax-bluetooth.py
 
-### Enable printing
-By default printing is disabled so you can test your code without the risk of accidental prints.
-To enable printing, call `instax.enable_printing()` or specify `printingEnabled=True` in the constructor.
 
-    instax = InstaxBluetooth(enablePrinting=True)
-    # or
-    instax = InstaxBluetooth()
-    instax.enable_printing()
+### Useful to know
 
-### Using a specific printer
-By default InstaxBluetooth connects to the first printer it can find. You can specify the name of the printer you want to connect to in the constructor. Note: you need to use the device name that ends in `(Android)`, not `(IOS)`:
+#### 1. Printing is disabled by default
+By default the `instax.print_image()` method will send all data to the printer _except_ the final print command. This is to prevent accidental prints when you're still testing your code. To allow printing either call `instax.enable_printing()` at any time after creating your `InstaxBLE` instance or enable it at creation time by specifying `print_enabled=True` in the constructor:
 
-    instax = InstaxBluetooth(deviceName='Instax-12345678(Android)')
+    instax = InstaxBLE()
+    instax.connect()
+    instax.enable_printing()  # allow printing
+    instax.print_image('image.jpg')  # print image
 
-or specify the device address instead:
+or
 
-    instax = InstaxBluetooth(deviceAddress='88:B4:36:xx:xx:xx')
+    instax = InstaxBLE(print_enabled=True)  # enable printing at creation time
+    instax.connect()
+    instax.print_image('image.jpg')  # print image
 
+#### 2. Connecting to a specific printer
 
+By default, this script will connect to the first Instax printer it can find, but you can also specify the name (`device_name`) or address (`device_address`) of the printer you want to connect to:
 
-### Sending LED patterns
-Controlling the LED on the printer works by sending patterns: series of colors to be displayed in order. You can find some patterns to use in `LedPatterns.py`, for example:
+    instax = InstaxBle()  # use the first printer you can find
+    instax = InstaxBle(device_name='INSTAX-12345678')  # you can ommit the (Android) or (IOS) part you might see in your Bluetooth settings
+    instax = InstaxBle(device_address='FA:AB:BC:xx:xx:xx')
 
-    import LedPatterns
-    ...
-    instax.send_led_pattern(LedPatterns.pulseGreen)
+#### 3. Gracefully disconnect on Exceptions
 
-You can tweak these using a couple of extra settings:
-1. `speed`: how long to show each color for (higher is a slower animation)
-2. `repeat`:
-    1. `0` plays the animation once
-    2. `1`-`254` repeats the animation n-times
-    3. `255` repeats forever
-3. `when`: patterns can start playing at different moments. Allowed values are:
-   1. `0` normal
-   2. `1` on print
-   3. `2` on print complete
-   4. `3` pattern swap (not sure what this is)
+It's recommended to wrap your code inside a `try ... catch` loop so you can catch any errors (or `KeyboardInterrupt`) and disconnect from the printer gracefully before dropping out of your code. Otherwise your printer will think it's still connected and you'll have to manually restart it to reconnect.
 
-So for example, to make the LED blink blue:
+        try:
+            instax = InstaxBle()
+            instax.connect()
+            instax.enable_printing()
+            instax.print_image('image.jpg')
+        except Exception as e:
+            print(e)
+        finally:
+            instax.disconnect()
 
-    send_led_pattern(colors=[[0, 0, 255], [0, 0, 0]], speed=5, repeat=255, when=0)
-    # or while getting the color pattern from `LedPatterns`
-    send_led_pattern(LedPatterns.blinkBLue, speed=5, repeat=255, when=0)
+### Notes on usage
 
+1. The printer only works with .jpg images. I haven't actually tested this, but the printer code seems to suggest this.
+2. The script does not yet check if your image is the right size or orientation. I've tested printing with images that are 600x800 pixels and don't know what happens when you send your image in landscape orientation so you might want to rotate it beforehand.
+3. Your image should be 65535 bytes or less.
+4. For faster (and possibly more reliable) printing remove any exifdata from your image. This will reduce the amount of data that needs to be send to the device. This also leaves more space for the image itself.
 
 ## Todo / Possible updates:
 
-The main branch uses sockets which only seem to work on Linux, while the GATT approach from the `gatt` branch works both on MacOS and Linux, but is extremely slow on the latter. So:
-- [ ] Alter main branch so that all socket/Linux specific code is pulled from a separate file
-- [ ] Allow loading a different method file for MacOS that uses GATT instead of sockets.
-- [ ] Check which one (if any) works on Windows?
-- [ ] Get rid of asyncio? Not sure if this is needed
+#### Testing:
+- [x] Test on Linux
+- [x] Test on MacOS
+- [ ] Test on Raspberry Pi
+- [ ] Test on Windows
 
-Printing process:
-- [ ] Currently both the socket and gatt version of this script send the image over in chunks of 900 bytes, like the Android app does. But the IOS app actually sends the image in chunks of 1808 bytes. Currently the gatt version of the script is extremely slow on Linux, but if we increase this chunk size we might be able to reduce the waiting time by 50%. Worth a try.
+#### Printer info:
+Some of these options have already been explored in other branches, but I need to bring them into the main branch.
+- [ ] Get battery level
+- [ ] Get number of photo's left in cartridge
+- [ ] Get accelerometer data
 
-Printer info:
-- [x] Get battery level
-- [x] Get number of photo's left in cartridge
-
-Image enhancements:
+#### Image enhancements:
+I'm not sure what happens when you send a different filetype or image in landscape orientation, but assuming those will fail:
+- [ ] Resize if image too small or too large (needs to be 600x800 px)
+- [ ] Resize if file size too large (max 65535 bytes)
 - [ ] Auto rotate image to portrait before sending
 - [ ] Convert to jpg if given a different filetype
 - [ ] Strip exif data to decrease filesize
 - [ ] Automatically lower the quality of the image to keep images below the 65535 bytes (0xFF 0xFF) file limit
 
-#### image credit
-Test pattern image from [Vecteezy](https://www.vecteezy.com/free-vector/test-pattern)
+### Instax WiFi printers
+If you want to control one of the WiFi enabled Instax printers instead, you can use [Instax-api](https://github.com/jpwsutton/instax_api).
+
+#### Credit
+* Huge thank you to everyone in [this instax-api thread](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-1352639100) (and @hermanneduard specifically) for their help in reverse engineering the Bluetooth protocol used.
+* Thanks to @kdewald for his help and patience in getting [simplepyble](https://pypi.org/project/simplepyble/) to work.
+* Test pattern image: [Test Pattern Vectors by Vecteezy](https://www.vecteezy.com/free-vector/test-pattern)
