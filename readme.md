@@ -17,6 +17,10 @@ I've only been able to test the script with the `Instax Mini Link`, as that is t
 
 If you have a different model let met know if this code works for you. If it doesn't you can find some info on recording the bluetooth data between your phone and the printer [here (Android)](https://github.com/javl/InstaxBLE/issues/4#issuecomment-1484123671) and [here (IOS)](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-751651250).
 
+### Alternatives
+Don't need Python and just want to print? With [Instax-link-web](https://github.com/linssenste/instax-link-web) you can print straight from your browser without the need to install anything.
+Working with one of the WiFi enabled Instax printers instead? Give [Instax-api](https://github.com/jpwsutton/instax_api) a try!.
+
 
 ### Installing and running
 
@@ -96,8 +100,6 @@ I'm not sure what happens when you send a different filetype or image in landsca
 - [ ] Strip exif data to decrease filesize
 - [ ] Automatically lower the quality of the image to keep images below the 65535 bytes (0xFF 0xFF) file limit
 
-### Instax WiFi printers
-If you want to control one of the WiFi enabled Instax printers instead, you can use [Instax-api](https://github.com/jpwsutton/instax_api).
 
 #### Credit
 * Huge thank you to everyone in [this instax-api thread](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-1352639100) (and @hermanneduard specifically) for their help in reverse engineering the Bluetooth protocol used.
