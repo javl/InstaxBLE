@@ -187,7 +187,7 @@ class InstaxBLE:
         if isinstance(eventType, EventType):  # allows passing in an event or a value directly
             eventType = eventType.value
 
-        header = b'\x41\x62'  # 'Ab' means from client to printer, responses from printer start with 'aB'
+        header = b'\x41\x62'  # 'Ab' means client to printer, 'aB' means printer to client
         opCode = bytes([eventType[0], eventType[1]])
         packetSize = pack('>H', 7 + len(payload))
         packet = header + packetSize + opCode + payload
