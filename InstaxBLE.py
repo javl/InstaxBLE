@@ -23,6 +23,7 @@ class InstaxBLE:
         deviceAddress: if specified, will only connect to a printer with this address.
         printEnabled: by default, actual printing is disabled to prevent misprints.
         """
+        self.chunkSize = 900
         self.printEnabled = print_enabled
         self.peripheral = None
         self.deviceName = device_name.upper() if device_name else None
@@ -258,12 +259,10 @@ class InstaxBLE:
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData)))
         ]
 
-        # divide image data up into chunks of <chunkSize> bytes and pad the last chunk with zeroes if needed
-        # chunkSize = 900
-        chunkSize = 900
-        imgDataChunks = [imgData[i:i + chunkSize] for i in range(0, len(imgData), chunkSize)]
-        if len(imgDataChunks[-1]) < chunkSize:
-            imgDataChunks[-1] = imgDataChunks[-1] + bytes(chunkSize - len(imgDataChunks[-1]))
+        # divide image data up into chunks of <self.chunkSize> bytes and pad the last chunk with zeroes if needed
+        imgDataChunks = [imgData[i:i + self.chunkSize] for i in range(0, len(imgData), self.chunkSize)]
+        if len(imgDataChunks[-1]) < self.chunkSize:
+            imgDataChunks[-1] = imgDataChunks[-1] + bytes(self.chunkSize - len(imgDataChunks[-1]))
 
         # create a packet from each of our chunks, this includes adding the chunk number
         for index, chunk in enumerate(imgDataChunks):
