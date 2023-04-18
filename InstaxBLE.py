@@ -313,10 +313,10 @@ def main(args={}):
     """ Example usage of the InstaxBLE class """
     instax = InstaxBLE(**args)
     try:
-        # By default the final print command does not get send to the printer
-        # in order to prevent misprints. If you want to enable printing, uncomment
-        # the next line, or pass --print-enabled when calling the script
-        # to enable printing
+        # To prevent misprints during development this script sends all the
+        # image data except the final 'go print' command. To enable printing
+        # uncomment the next line, or pass --print-enabled when calling
+        # this script
 
         # instax.enable_printing()
 
