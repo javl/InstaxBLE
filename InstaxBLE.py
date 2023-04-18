@@ -80,8 +80,9 @@ class InstaxBLE:
         try:
             event = EventType((op1, op2))
             self.log('\tevent: ', event)
-        except Exception:
+        except ValueError:
             self.log(f"Unknown EventType: ({op1}, {op2})")
+            return
 
         self.parse_response(packet)
 
