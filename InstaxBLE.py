@@ -66,8 +66,10 @@ class InstaxBLE:
         if not self.quiet:
             if len(packet) < 8:
                 self.log(f"\tError: response packet size should be >= 8 (was {len(packet)})!")
+                return
             elif not self.validate_checksum(packet):
                 self.log("\tResponse packet checksum was invalid!")
+                return
 
         header, length, op1, op2 = unpack_from('<HHBB', packet)
         # self.log('\theader: ', header, '\t', self.prettify_bytearray(packet[0:2]))
