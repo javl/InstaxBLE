@@ -3,7 +3,7 @@
 from math import ceil
 from struct import pack, unpack_from
 from time import sleep
-from Types import EventType
+from Types import EventType, InfoType
 import argparse
 import LedPatterns
 import simplepyble
@@ -35,6 +35,12 @@ class InstaxBLE:
         self.writeCharUUID = '70954783-2d83-473d-9e5f-81e1d02d5273'
         self.notifyCharUUID = '70954784-2d83-473d-9e5f-81e1d02d5273'
         self.packetsForPrinting = []
+        self.pos = (0, 0, 0, 0)
+        self.batteryState = 0
+        self.batteryPercentage = 0
+        self.photosLeft = 0
+        self.isCharging = False
+        self.imageSize = (0, 0)
 
         adapters = simplepyble.Adapter.get_adapters()
         if len(adapters) == 0:
@@ -53,11 +59,43 @@ class InstaxBLE:
         if self.verbose:
             print(msg)
 
-    def parse_response(self, packet):
+    def parse_printer_response(self, event, packet):
         """ Parse the response packet and print the result """
         # todo: create parsers for the different types of responses
         # Placeholder for a later update
-        return
+        if event == EventType.XYZ_AXIS_INFO:
+            x, y, z, o = unpack_from('<hhhB', packet[6:-1])
+            self.pos = (x, y, z, o)
+        elif event == EventType.PRINTING_COMPLETE:
+            self.log('Printing complete')
+        elif event == EventType.PRINTING_ERROR:
+            self.log('Error during printing')
+        elif event == EventType.LED_PATTERN_SETTINGS:
+            pass
+        elif event == EventType.SUPPORT_FUNCTION_INFO:
+            try:
+                infoType = InfoType(packet[6])
+            except ValueError:
+                self.log('Unknown InfoType: ', packet[6])
+                return
+
+            if infoType == InfoType.IMAGE_SUPPORT_INFO:
+                w, h = unpack_from('>HH', packet[8:12])
+                self.imageSize = (w, h)
+            elif infoType == InfoType.BATTERY_INFO:
+                self.batteryState, self.batteryPercentage = unpack_from('>BB', packet[8:10])
+                self.log(f'battery state: {self.batteryState}, battery percentage: {self.batteryPercentage}')
+            elif infoType == InfoType.PRINTER_FUNCTION_INFO:
+                dataByte = packet[8]
+                self.photosLeft = dataByte & 15
+                self.isCharging = (1 << 7) & dataByte >= 1
+                self.log(f'photos left: {self.photosLeft}')
+                if self.isCharging:
+                    self.log('Printer is charging')
+                else:
+                    self.log('Printer is running on battery')
+        else:
+            self.log(f'Uncaught response from printer. Eventype: {event}')
 
     def notification_handler(self, packet):
         """ Gets called whenever the printer replies and handles parsing the received data """
@@ -84,7 +122,7 @@ class InstaxBLE:
             self.log(f"Unknown EventType: ({op1}, {op2})")
             return
 
-        self.parse_response(packet)
+        self.parse_printer_response(event, packet)
 
         if len(self.packetsForPrinting) > 0:
             self.log('Packets left to send: ', len(self.packetsForPrinting))
@@ -114,6 +152,8 @@ class InstaxBLE:
                     if not self.quiet:
                         self.log('error on attaching notification_handler: ', e)
                         return
+
+                self.get_printer_info()
 
     def disconnect(self):
         """ Disconnect from the printer (if connected) """
