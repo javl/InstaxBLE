@@ -43,10 +43,15 @@ class InstaxBLE:
             else:
                 sys.exit()
 
-        if len(adapters) > 1 and self.verbose:
-            print(f"Found multiple adapters: {', '.join([adapter.identifier() for adapter in adapters])}")
-            print(f"Using the first one: {adapters[0].identifier()}")
+        if len(adapters) > 1:
+            self.log(f"Found multiple adapters: {', '.join([adapter.identifier() for adapter in adapters])}")
+            self.log(f"Using the first one: {adapters[0].identifier()}")
         self.adapter = adapters[0]
+
+    def log(self, msg):
+        """ Print a debug message"""
+        if self.verbose:
+            print(msg)
 
     def parse_response(self, packet):
         """ Parse the response packet and print the result """
@@ -56,33 +61,30 @@ class InstaxBLE:
 
     def notification_handler(self, packet):
         """ Gets called whenever the printer replies and handles parsing the received data """
-        if self.verbose:
-            print('Notification handler:')
-            print(f'\t{self.prettify_bytearray(packet[:40])}')
+        self.log('Notification handler:')
+        self.log(f'\t{self.prettify_bytearray(packet[:40])}')
         if not self.quiet:
             if len(packet) < 8:
-                print(f"\tError: response packet size should be >= 8 (was {len(packet)})!")
+                self.log(f"\tError: response packet size should be >= 8 (was {len(packet)})!")
             elif not self.validate_checksum(packet):
-                print("\tResponse packet checksum was invalid!")
+                self.log("\tResponse packet checksum was invalid!")
 
         header, length, op1, op2 = unpack_from('<HHBB', packet)
-        # print('\theader: ', header, '\t', self.prettify_bytearray(packet[0:2]))
-        # print('\tlength: ', length, '\t', self.prettify_bytearray(packet[2:4]))
-        # print('\top1: ', op1, '\t\t', self.prettify_bytearray(packet[4:5]))
-        # print('\top2: ', op2, '\t\t', self.prettify_bytearray(packet[5:6]))
+        # self.log('\theader: ', header, '\t', self.prettify_bytearray(packet[0:2]))
+        # self.log('\tlength: ', length, '\t', self.prettify_bytearray(packet[2:4]))
+        # self.log('\top1: ', op1, '\t\t', self.prettify_bytearray(packet[4:5]))
+        # self.log('\top2: ', op2, '\t\t', self.prettify_bytearray(packet[5:6]))
 
-        if self.verbose:
-            try:
-                event = EventType((op1, op2))
-            except Exception:
-                event = f"Unknown event: ({op1}, {op2})"
-            print('\tevent: ', event)
+        try:
+            event = EventType((op1, op2))
+            self.log('\tevent: ', event)
+        except Exception:
+            self.log(f"Unknown EventType: ({op1}, {op2})")
 
         self.parse_response(packet)
 
         if len(self.packetsForPrinting) > 0:
-            if self.verbose:
-                print('Packets left to send: ', len(self.packetsForPrinting))
+            self.log('Packets left to send: ', len(self.packetsForPrinting))
             packet = self.packetsForPrinting.pop(0)
             self.send_packet(packet)
 
@@ -94,22 +96,20 @@ class InstaxBLE:
         self.peripheral = self.find_device(timeout=timeout)
         if self.peripheral:
             try:
-                if self.verbose:
-                    print(f"\n\nConnecting to: {self.peripheral.identifier()} [{self.peripheral.address()}]")
+                self.log(f"\n\nConnecting to: {self.peripheral.identifier()} [{self.peripheral.address()}]")
                 self.peripheral.connect()
             except Exception as e:
                 if not self.quiet:
-                    print('error on connecting: ', e)
+                    self.log('error on connecting: ', e)
 
             if self.peripheral.is_connected():
-                if self.verbose:
-                    print(f"Connected (mtu: {self.peripheral.mtu()})")
-                    print('Attaching notification_handler')
+                self.log(f"Connected (mtu: {self.peripheral.mtu()})")
+                self.log('Attaching notification_handler')
                 try:
                     self.peripheral.notify(self.serviceUUID, self.notifyCharUUID, self.notification_handler)
                 except Exception as e:
                     if not self.quiet:
-                        print('error on attaching notification_handler: ', e)
+                        self.log('error on attaching notification_handler: ', e)
 
     def disconnect(self):
         """ Disconnect from the printer (if connected) """
@@ -117,8 +117,7 @@ class InstaxBLE:
             return
         if self.peripheral:
             if self.peripheral.is_connected():
-                if self.verbose:
-                    print('Disconnecting...')
+                self.log('Disconnecting...')
                 self.peripheral.disconnect()
 
     def enable_printing(self):
@@ -131,8 +130,7 @@ class InstaxBLE:
 
     def find_device(self, timeout=0):
         """" Scan for our device and return it when found """
-        if self.verbose:
-            print('Looking for instax printer...')
+        self.log('Looking for instax printer...')
         secondsTried = 0
         while True:
             self.adapter.scan_for(2000)
@@ -140,8 +138,7 @@ class InstaxBLE:
             for peripheral in peripherals:
                 foundName = peripheral.identifier()
                 foundAddress = peripheral.address()
-                if self.verbose:
-                    print(f"Found: {foundName} [{foundAddress}]")
+                self.log(f"Found: {foundName} [{foundAddress}]")
                 if (self.deviceName and foundName.startswith(self.deviceName)) or \
                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
                    (self.deviceName is None and self.deviceAddress is None and \
@@ -151,7 +148,7 @@ class InstaxBLE:
                     if peripheral.is_connectable():
                         return peripheral
                     elif not self.quiet:
-                        print(f"Printer at {foundAddress} is not connectable")
+                        self.log(f"Printer at {foundAddress} is not connectable")
             secondsTried += 1
             if timeout != 0 and secondsTried >= timeout:
                 return None
@@ -203,9 +200,9 @@ class InstaxBLE:
         """ Send a packet to the printer """
         if not self.dummyPrinter and not self.quiet:
             if not self.peripheral:
-                print("no peripheral to send packet to")
+                self.log("no peripheral to send packet to")
             elif not self.peripheral.is_connected():
-                print("peripheral not connected")
+                self.log("peripheral not connected")
 
         header, length, op1, op2 = unpack_from('<HHBB', packet)
         try:
@@ -213,16 +210,13 @@ class InstaxBLE:
         except Exception:
             event = 'Unknown event'
 
-        if self.verbose:
-            print('sending eventtype: ', event)
+        self.log('sending eventtype: ', event)
 
         smallPacketSize = 182
         numberOfParts = ceil(len(packet) / smallPacketSize)
-        # if self.verbose:
-        #     print("number of packets to send: ", numberOfParts)
+        # self.log("number of packets to send: ", numberOfParts)
         for subPartIndex in range(numberOfParts):
-            # if self.verbose:
-            #     print((subPartIndex + 1), '/', numberOfParts)
+            # self.log((subPartIndex + 1), '/', numberOfParts)
             subPacket = packet[subPartIndex * smallPacketSize:subPartIndex * smallPacketSize + smallPacketSize]
 
             if not self.dummyPrinter:
@@ -244,7 +238,7 @@ class InstaxBLE:
             return imgdata
         except Exception as e:
             if not self.quiet:
-                print('Error loading image: ', e)
+                self.log('Error loading image: ', e)
 
     def print_image(self, imgSrc):
         """
@@ -275,17 +269,17 @@ class InstaxBLE:
             self.packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE))
             self.packetsForPrinting.append(self.create_packet((0, 2), b'\x02'))
         elif not self.quiet:
-            print("Printing is disabled, sending all packets except the actual print command")
+            self.log("Printing is disabled, sending all packets except the actual print command")
 
         # for packet in self.packetsForPrinting:
-        #     print(self.prettify_bytearray(packet))
+        #     self.log(self.prettify_bytearray(packet))
         # exit()
         # send the first packet from our list, the packet handler will take care of the rest
 
         if not self.dummyPrinter:
             packet = self.packetsForPrinting.pop(0)
             self.send_packet(packet)
-            print("entering wait loop")
+            self.log("entering wait loop")
             try:
                 while len(self.packetsForPrinting) > 0:
                     sleep(0.1)
@@ -294,8 +288,7 @@ class InstaxBLE:
 
     def print_services(self):
         """ Get and display and overview of the printer's services and characteristics """
-        if self.verbose:
-            print("Successfully connected, listing services...")
+        self.log("Successfully connected, listing services...")
         services = self.peripheral.services()
         service_characteristic_pair = []
         for service in services:
@@ -303,12 +296,11 @@ class InstaxBLE:
                 service_characteristic_pair.append((service.uuid(), characteristic.uuid()))
 
         for i, (service_uuid, characteristic) in enumerate(service_characteristic_pair):
-            print(f"{i}: {service_uuid} {characteristic}")
+            self.log(f"{i}: {service_uuid} {characteristic}")
 
     def get_function_info(self):
         """ Get and display the printer's function info """
-        if self.verbose:
-            print("Getting function info...")
+        self.log("Getting function info...")
         packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, b'0x02')
         self.send_packet(packet)
 
@@ -318,16 +310,16 @@ def main(args={}):
     instax = InstaxBLE(**args)
     try:
         # By default the final print command does not get send to the printer
-        # Uncomment the next line, or pass --print-enabled when calling the script
+        # in order to prevent misprints. If you want to enable printing, uncomment
+        # the next line, or pass --print-enabled when calling the script
         # to enable printing
+
         # instax.enable_printing()
 
         instax.connect()
         instax.get_function_info()
-        # print("Successfully connected, listing services...")
-        # instax.print_services()
 
-        # Set a rainbox effect to be shown while printing and a pulsatating
+        # Set a rainbox effect to be shown while printing and a pulsating
         # green effect when printing is done
         instax.send_led_pattern(LedPatterns.rainbow, when=1)
         instax.send_led_pattern(LedPatterns.pulseGreen, when=2)
@@ -336,7 +328,7 @@ def main(args={}):
         instax.print_image('example.jpg')
 
     except Exception as e:
-        print('Error: ', e)
+        instax.log('Error: ', e)
     finally:
         # all done, disconnect
         instax.disconnect()
