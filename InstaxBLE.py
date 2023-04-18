@@ -113,6 +113,7 @@ class InstaxBLE:
                 except Exception as e:
                     if not self.quiet:
                         self.log('error on attaching notification_handler: ', e)
+                        return
 
     def disconnect(self):
         """ Disconnect from the printer (if connected) """
