@@ -90,6 +90,7 @@ Some of these options have already been explored in other branches, but I need t
 - [ ] Get battery level
 - [ ] Get number of photo's left in cartridge
 - [ ] Get accelerometer data
+- [ ] Get button press
 
 #### Image enhancements:
 I'm not sure what happens when you send a different filetype or image in landscape orientation, but assuming those will fail:
