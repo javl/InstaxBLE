@@ -66,21 +66,19 @@ class InstaxBLE:
         if event == EventType.XYZ_AXIS_INFO:
             x, y, z, o = unpack_from('<hhhB', packet[6:-1])
             self.pos = (x, y, z, o)
-        elif event == EventType.PRINTING_COMPLETE:
-            self.log('Printing complete')
-        elif event == EventType.PRINTING_ERROR:
-            self.log('Error during printing')
         elif event == EventType.LED_PATTERN_SETTINGS:
             pass
         elif event == EventType.SUPPORT_FUNCTION_INFO:
             try:
-                infoType = InfoType(packet[6])
+                infoType = InfoType(packet[7])
             except ValueError:
-                self.log('Unknown InfoType: ', packet[6])
+                self.log(f'Unknown InfoType: {packet[7]}')
                 return
 
             if infoType == InfoType.IMAGE_SUPPORT_INFO:
                 w, h = unpack_from('>HH', packet[8:12])
+                # self.log(self.prettify_bytearray(packet[8:12]))
+                self.log(f'image size: {w}x{h}')
                 self.imageSize = (w, h)
             elif infoType == InfoType.BATTERY_INFO:
                 self.batteryState, self.batteryPercentage = unpack_from('>BB', packet[8:10])
@@ -117,7 +115,7 @@ class InstaxBLE:
 
         try:
             event = EventType((op1, op2))
-            self.log('\tevent: ', event)
+            self.log(f'\tevent: {event}')
         except ValueError:
             self.log(f"Unknown EventType: ({op1}, {op2})")
             return
@@ -125,7 +123,7 @@ class InstaxBLE:
         self.parse_printer_response(event, packet)
 
         if len(self.packetsForPrinting) > 0:
-            self.log('Packets left to send: ', len(self.packetsForPrinting))
+            self.log(f'Packets left to send: {len(self.packetsForPrinting)}')
             packet = self.packetsForPrinting.pop(0)
             self.send_packet(packet)
 
@@ -141,7 +139,7 @@ class InstaxBLE:
                 self.peripheral.connect()
             except Exception as e:
                 if not self.quiet:
-                    self.log('error on connecting: ', e)
+                    self.log(f'error on connecting: {e}')
 
             if self.peripheral.is_connected():
                 self.log(f"Connected (mtu: {self.peripheral.mtu()})")
@@ -150,7 +148,7 @@ class InstaxBLE:
                     self.peripheral.notify(self.serviceUUID, self.notifyCharUUID, self.notification_handler)
                 except Exception as e:
                     if not self.quiet:
-                        self.log('error on attaching notification_handler: ', e)
+                        self.log(f'error on attaching notification_handler: {e}')
                         return
 
                 self.get_printer_info()
@@ -254,7 +252,7 @@ class InstaxBLE:
         except Exception:
             event = 'Unknown event'
 
-        self.log('sending eventtype: ', event)
+        self.log(f'sending eventtype: {event}')
 
         smallPacketSize = 182
         numberOfParts = ceil(len(packet) / smallPacketSize)
@@ -282,13 +280,17 @@ class InstaxBLE:
             return imgdata
         except Exception as e:
             if not self.quiet:
-                self.log('Error loading image: ', e)
+                self.log(f'Error loading image: {e}')
 
     def print_image(self, imgSrc):
         """
         print an image. Either pass a path to an image (as a string) or pass
         the bytearray to print directly
         """
+        if self.photosLeft == 0:
+            self.log("No photos left")
+            return
+
         imgData = imgSrc
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             imgData = self.image_to_bytes(imgSrc)
@@ -342,11 +344,25 @@ class InstaxBLE:
         for i, (service_uuid, characteristic) in enumerate(service_characteristic_pair):
             self.log(f"{i}: {service_uuid} {characteristic}")
 
-    def get_function_info(self):
+    def get_printer_orientation(self):
+        packet = self.create_packet(EventType.XYZ_AXIS_INFO)
+        self.send_packet(packet)
+
+    def get_printer_status(self):
+        packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, pack('>B', InfoType.PRINTER_FUNCTION_INFO.value))
+        self.send_packet(packet)
+
+    def get_printer_info(self):
         """ Get and display the printer's function info """
         self.log("Getting function info...")
-        packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, b'0x02')
+
+        packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, pack('>B', InfoType.IMAGE_SUPPORT_INFO.value))
         self.send_packet(packet)
+
+        packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, pack('>B', InfoType.BATTERY_INFO.value))
+        self.send_packet(packet)
+
+        self.get_printer_status()
 
 
 def main(args={}):
@@ -361,18 +377,22 @@ def main(args={}):
         # instax.enable_printing()
 
         instax.connect()
-        instax.get_function_info()
 
         # Set a rainbox effect to be shown while printing and a pulsating
         # green effect when printing is done
         instax.send_led_pattern(LedPatterns.rainbow, when=1)
         instax.send_led_pattern(LedPatterns.pulseGreen, when=2)
 
+        while True:
+            # instax.get_printer_status()
+            instax.get_printer_orientation()
+            sleep(.5)
         # send the image (.jpg) to the printer
-        instax.print_image('example.jpg')
+        # instax.print_image('example.jpg')
 
     except Exception as e:
-        instax.log('Error: ', e)
+        print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
+        instax.log(f'Error: {e}')
     finally:
         # all done, disconnect
         instax.disconnect()
