@@ -23,7 +23,7 @@ class InstaxBLE:
         deviceAddress: if specified, will only connect to a printer with this address.
         printEnabled: by default, actual printing is disabled to prevent misprints.
         """
-        self.chunkSize = 900
+        self.chunkSize = 1808
         self.printEnabled = print_enabled
         self.peripheral = None
         self.deviceName = device_name.upper() if device_name else None
