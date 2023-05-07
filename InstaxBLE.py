@@ -291,7 +291,7 @@ class InstaxBLE:
         print an image. Either pass a path to an image (as a string) or pass
         the bytearray to print directly
         """
-        if self.photosLeft == 0:
+        if self.photosLeft == 0 and not self.dummyPrinter:
             self.log("Can't print: no photos left")
             return
 
