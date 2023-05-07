@@ -397,7 +397,7 @@ def main(args={}):
         if instax.image_path:
             instax.print_image(args['file_name'])
         else:
-            instax.print_image('example.jpg')
+            instax.print_image('example-mini.jpg')
 
     except Exception as e:
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
