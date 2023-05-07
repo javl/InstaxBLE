@@ -382,19 +382,18 @@ def main(args={}):
         instax.send_led_pattern(LedPatterns.rainbow, when=1)
         instax.send_led_pattern(LedPatterns.pulseGreen, when=2)
 
-        while True:
-            # instax.get_printer_status()
-            instax.get_printer_orientation()
-            sleep(.5)
+        # you can also read the current accelerometer values if you want
+        # while True:
+        #     instax.get_printer_orientation()
+        #     sleep(.5)
         # send the image (.jpg) to the printer
-        # instax.print_image('example.jpg')
+        instax.print_image('example.jpg')
 
     except Exception as e:
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
         instax.log(f'Error: {e}')
     finally:
-        # all done, disconnect
-        instax.disconnect()
+        instax.disconnect()  # all done, disconnect
 
 
 if __name__ == '__main__':
