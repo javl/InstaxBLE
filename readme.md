@@ -87,9 +87,9 @@ It's recommended to wrap your code inside a `try ... catch` loop so you can catc
 
 #### Printer info:
 Some of these options have already been explored in other branches, but I need to bring them into the main branch.
-- [ ] Get battery level
-- [ ] Get number of photo's left in cartridge
-- [ ] Get accelerometer data
+- [x] Get battery level
+- [x] Get number of photo's left in cartridge
+- [x] Get accelerometer data
 - [ ] Get button press
 
 #### Image enhancements:
