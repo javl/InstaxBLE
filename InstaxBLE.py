@@ -395,7 +395,7 @@ def main(args={}):
         # passing the image_path as an argument when calling
         # this script, or by specifying the path in your code
         if instax.image_path:
-            instax.print_image(args['file_name'])
+            instax.print_image(instax.image_path)
         else:
             if instax.imageSize == (600, 800):
                 instax.print_image('example-mini.jpg')
