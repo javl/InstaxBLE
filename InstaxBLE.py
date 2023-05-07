@@ -17,7 +17,8 @@ class InstaxBLE:
                  print_enabled=False,
                  dummy_printer=True,
                  verbose=False,
-                 quiet=False):
+                 quiet=False,
+                 image_path=None):
         """
         Initialize the InstaxBLE class.
         deviceAddress: if specified, will only connect to a printer with this address.
@@ -126,6 +127,8 @@ class InstaxBLE:
             self.log(f'Packets left to send: {len(self.packetsForPrinting)}')
             packet = self.packetsForPrinting.pop(0)
             self.send_packet(packet)
+            if len(self.packetsForPrinting) % 10 == 0:
+                self.log("sending packets:", len(self.packetsForPrinting))
 
     def connect(self, timeout=0):
         """ Connect to the printer. Stops trying after <timeout> seconds. """
@@ -288,7 +291,7 @@ class InstaxBLE:
         the bytearray to print directly
         """
         if self.photosLeft == 0:
-            self.log("No photos left")
+            self.log("Can't print: no photos left")
             return
 
         imgData = imgSrc
@@ -298,7 +301,7 @@ class InstaxBLE:
         self.packetsForPrinting = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00' + pack('>I', len(imgData)))
         ]
-        # divide image data up into chunks of <self.chunkSize> bytes and pad the last chunk with zeroes if needed
+        # divide image data up into chunks of <chunkSize> bytes and pad the last chunk with zeroes if needed
         imgDataChunks = [imgData[i:i + self.chunkSize] for i in range(0, len(imgData), self.chunkSize)]
         if len(imgDataChunks[-1]) < self.chunkSize:
             imgDataChunks[-1] = imgDataChunks[-1] + bytes(self.chunkSize - len(imgDataChunks[-1]))
@@ -377,7 +380,7 @@ def main(args={}):
 
         instax.connect()
 
-        # Set a rainbox effect to be shown while printing and a pulsating
+        # Set a rainbow effect to be shown while printing and a pulsating
         # green effect when printing is done
         instax.send_led_pattern(LedPatterns.rainbow, when=1)
         instax.send_led_pattern(LedPatterns.pulseGreen, when=2)
@@ -386,8 +389,10 @@ def main(args={}):
         # while True:
         #     instax.get_printer_orientation()
         #     sleep(.5)
-        # send the image (.jpg) to the printer
-        instax.print_image('example.jpg')
+
+        # send your image (.jpg) to the printer
+        if instax.image_path:
+            instax.print_image(args['file_name'])
 
     except Exception as e:
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
@@ -404,6 +409,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dummy-printer', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-q', '--quiet', action='store_true')
+    parser.add_argument('-i', '--image-path', help='Path to the image file')
     args = parser.parse_args()
 
     main(vars(args))
