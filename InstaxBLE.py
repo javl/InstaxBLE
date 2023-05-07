@@ -397,7 +397,14 @@ def main(args={}):
         if instax.image_path:
             instax.print_image(args['file_name'])
         else:
-            instax.print_image('example-mini.jpg')
+            if instax.imageSize == (600, 800):
+                instax.print_image('example-mini.jpg')
+            elif instax.imageSize == (800, 800):
+                instax.print_image('example-square.jpg')
+            elif instax.imageSize == (1260, 800):
+                instax.print_image('example-wide.jpg')
+            else:
+                instax.log(f"Unknown image size requested by printer: {instax.imageSize}")
 
     except Exception as e:
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
