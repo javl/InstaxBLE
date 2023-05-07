@@ -391,9 +391,13 @@ def main(args={}):
         #     instax.get_printer_orientation()
         #     sleep(.5)
 
-        # send your image (.jpg) to the printer
+        # send your image (.jpg) to the printer by
+        # passing the image_path as an argument when calling
+        # this script, or by specifying the path in your code
         if instax.image_path:
             instax.print_image(args['file_name'])
+        else:
+            instax.print_image('example.jpg')
 
     except Exception as e:
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
