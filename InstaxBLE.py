@@ -31,6 +31,7 @@ class InstaxBLE:
         self.deviceAddress = device_address
         self.dummyPrinter = dummy_printer
         self.quiet = quiet
+        self.image_path = image_path
         self.verbose = verbose if not self.quiet else False
         self.serviceUUID = '70954782-2d83-473d-9e5f-81e1d02d5273'
         self.writeCharUUID = '70954783-2d83-473d-9e5f-81e1d02d5273'
