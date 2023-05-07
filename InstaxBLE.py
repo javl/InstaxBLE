@@ -296,9 +296,8 @@ class InstaxBLE:
             imgData = self.image_to_bytes(imgSrc)
 
         self.packetsForPrinting = [
-            self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00\x00\x00' + pack('>H', len(imgData)))
+            self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00' + pack('>I', len(imgData)))
         ]
-
         # divide image data up into chunks of <self.chunkSize> bytes and pad the last chunk with zeroes if needed
         imgDataChunks = [imgData[i:i + self.chunkSize] for i in range(0, len(imgData), self.chunkSize)]
         if len(imgDataChunks[-1]) < self.chunkSize:
