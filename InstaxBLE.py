@@ -8,7 +8,99 @@ import argparse
 import LedPatterns
 import simplepyble
 import sys
+from PIL import Image
+from io import BytesIO
 
+def pil_image_to_bytes(img: Image.Image, max_size_kb: int = None) -> bytearray:
+    img_buffer = BytesIO()
+
+    # Convert the image to RGB mode if it's in RGBA mode
+    if img.mode == 'RGBA':
+        img = img.convert('RGB')
+
+    # Resize the image to 800x800 pixels
+    img = img.resize((800, 800), Image.ANTIALIAS)
+
+    def save_img_with_quality(quality):
+        img_buffer.seek(0)
+        img.save(img_buffer, format='JPEG', quality=quality)
+        return img_buffer.tell() / 1024
+
+    if max_size_kb is not None:
+        low_quality, high_quality = 1, 100
+        current_quality = 75
+        closest_quality = current_quality
+        min_target_size_kb = max_size_kb * 0.9
+
+        while low_quality <= high_quality:
+            output_size_kb = save_img_with_quality(current_quality)
+
+            if output_size_kb <= max_size_kb and output_size_kb >= min_target_size_kb:
+                closest_quality = current_quality
+                break
+
+            if output_size_kb > max_size_kb:
+                high_quality = current_quality - 1
+            else:
+                low_quality = current_quality + 1
+
+            current_quality = (low_quality + high_quality) // 2
+            closest_quality = current_quality
+
+        # Save the image with the closest_quality
+        save_img_with_quality(closest_quality)
+    else:
+        img.save(img_buffer, format='JPEG')
+
+    return bytearray(img_buffer.getvalue())
+
+def pil_image_to_bytes(img: Image.Image, max_size_kb: int = None) -> bytearray:
+    img_buffer = BytesIO()
+
+    # Convert the image to RGB mode if it's in RGBA mode
+    if img.mode == 'RGBA':
+        img = img.convert('RGB')
+
+    img = img.resize((800, 800), Image.ANTIALIAS)
+
+    def save_img_with_quality(quality):
+        img_buffer.seek(0)
+        img.save(img_buffer, format='JPEG', quality=quality)
+        return img_buffer.tell() / 1024
+
+    if max_size_kb is not None:
+        low_quality, high_quality = 1, 100
+        current_quality = 75
+        step = 25
+        closest_quality = current_quality
+        closest_size_diff = float('inf')
+
+        while low_quality <= high_quality:
+            output_size_kb = save_img_with_quality(current_quality)
+            print ("current output quality:", current_quality, " current size:", output_size_kb)
+            size_diff = abs(output_size_kb - max_size_kb)
+
+            if size_diff < closest_size_diff:
+                closest_size_diff = size_diff
+                closest_quality = current_quality
+
+            # Stop the search if the output size is within 10% of the max file size
+            if size_diff <= max_size_kb * 0.1:
+                break
+
+            if output_size_kb > max_size_kb:
+                high_quality = current_quality - 1
+            else:
+                low_quality = current_quality + 1
+
+            current_quality = (low_quality + high_quality) // 2
+
+        # Save the image with the closest_quality
+        save_img_with_quality(closest_quality)
+    else:
+        img.save(img_buffer, format='JPEG')
+
+    return bytearray(img_buffer.getvalue())
 
 class InstaxBLE:
     def __init__(self,
@@ -298,15 +390,26 @@ class InstaxBLE:
 
         imgData = imgSrc
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
-            imgData = self.image_to_bytes(imgSrc)
+            image = Image.open(imgSrc)
+            image_byte_array = pil_image_to_bytes(image, max_size_kb=105)
+            imgData = image_byte_array #self.image_to_bytes(imgSrc)
+        if self.verbose:
+            print( "len of imagedata:", len(imgData))
 
         self.packetsForPrinting = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00' + pack('>I', len(imgData)))
         ]
+
+        print( "print_images::0.2")
+
+
         # divide image data up into chunks of <chunkSize> bytes and pad the last chunk with zeroes if needed
-        imgDataChunks = [imgData[i:i + self.chunkSize] for i in range(0, len(imgData), self.chunkSize)]
-        if len(imgDataChunks[-1]) < self.chunkSize:
-            imgDataChunks[-1] = imgDataChunks[-1] + bytes(self.chunkSize - len(imgDataChunks[-1]))
+        # chunkSize = 900
+        chunkSize = 1808
+        imgDataChunks = [imgData[i:i + chunkSize] for i in range(0, len(imgData), chunkSize)]
+        print( "print_images::1")
+        if len(imgDataChunks[-1]) < chunkSize:
+            imgDataChunks[-1] = imgDataChunks[-1] + bytes(chunkSize - len(imgDataChunks[-1]))
 
         # create a packet from each of our chunks, this includes adding the chunk number
         for index, chunk in enumerate(imgDataChunks):
@@ -319,7 +422,9 @@ class InstaxBLE:
             self.packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE))
             self.packetsForPrinting.append(self.create_packet((0, 2), b'\x02'))
         elif not self.quiet:
-            self.log("Printing is disabled, sending all packets except the actual print command")
+            print("Printing is disabled, sending all packets except the actual print command")
+
+        print( "print_images::3")
 
         # for packet in self.packetsForPrinting:
         #     self.log(self.prettify_bytearray(packet))
