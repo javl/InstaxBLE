@@ -184,7 +184,7 @@ class InstaxBLE:
             for peripheral in peripherals:
                 foundName = peripheral.identifier()
                 foundAddress = peripheral.address()
-                if foundName.startsWith('INSTAX'):
+                if foundName.startswith('INSTAX'):
                     self.log(f"Found: {foundName} [{foundAddress}]")
                 if (self.deviceName and foundName.startswith(self.deviceName)) or \
                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
