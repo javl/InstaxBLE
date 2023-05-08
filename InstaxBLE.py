@@ -34,6 +34,7 @@ def pil_image_to_bytes(img: Image.Image, max_size_kb: int = None) -> bytearray:
 
         while low_quality <= high_quality:
             output_size_kb = save_img_with_quality(current_quality)
+            print ("current output quality:", current_quality, " current size:", output_size_kb)
 
             if output_size_kb <= max_size_kb and output_size_kb >= min_target_size_kb:
                 closest_quality = current_quality
@@ -46,54 +47,6 @@ def pil_image_to_bytes(img: Image.Image, max_size_kb: int = None) -> bytearray:
 
             current_quality = (low_quality + high_quality) // 2
             closest_quality = current_quality
-
-        # Save the image with the closest_quality
-        save_img_with_quality(closest_quality)
-    else:
-        img.save(img_buffer, format='JPEG')
-
-    return bytearray(img_buffer.getvalue())
-
-def pil_image_to_bytes(img: Image.Image, max_size_kb: int = None) -> bytearray:
-    img_buffer = BytesIO()
-
-    # Convert the image to RGB mode if it's in RGBA mode
-    if img.mode == 'RGBA':
-        img = img.convert('RGB')
-
-    img = img.resize((800, 800), Image.ANTIALIAS)
-
-    def save_img_with_quality(quality):
-        img_buffer.seek(0)
-        img.save(img_buffer, format='JPEG', quality=quality)
-        return img_buffer.tell() / 1024
-
-    if max_size_kb is not None:
-        low_quality, high_quality = 1, 100
-        current_quality = 75
-        step = 25
-        closest_quality = current_quality
-        closest_size_diff = float('inf')
-
-        while low_quality <= high_quality:
-            output_size_kb = save_img_with_quality(current_quality)
-            print ("current output quality:", current_quality, " current size:", output_size_kb)
-            size_diff = abs(output_size_kb - max_size_kb)
-
-            if size_diff < closest_size_diff:
-                closest_size_diff = size_diff
-                closest_quality = current_quality
-
-            # Stop the search if the output size is within 10% of the max file size
-            if size_diff <= max_size_kb * 0.1:
-                break
-
-            if output_size_kb > max_size_kb:
-                high_quality = current_quality - 1
-            else:
-                low_quality = current_quality + 1
-
-            current_quality = (low_quality + high_quality) // 2
 
         # Save the image with the closest_quality
         save_img_with_quality(closest_quality)
