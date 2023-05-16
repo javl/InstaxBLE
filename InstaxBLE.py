@@ -31,7 +31,7 @@ class InstaxBLE:
         self.printEnabled = print_enabled
         self.peripheral = None
         self.deviceName = device_name.upper() if device_name else None
-        self.deviceAddress = device_address
+        self.deviceAddress = device_address.upper() if device_address else None
         self.dummyPrinter = dummy_printer
         self.quiet = quiet
         self.image_path = image_path
