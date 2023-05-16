@@ -383,7 +383,7 @@ class InstaxBLE:
             img = img.convert('RGB')
 
         # Resize the image to 800x800 pixels
-        img = img.resize((800, 800), Image.ANTIALIAS)
+        img = img.resize((800, 800), Image.Resampling.LANCZOS)
 
         def save_img_with_quality(quality):
             img_buffer.seek(0)
