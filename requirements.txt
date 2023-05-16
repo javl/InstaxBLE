@@ -1,1 +1,2 @@
+Pillow==9.5.0
 simplepyble==0.6.1
