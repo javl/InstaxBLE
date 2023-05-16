@@ -26,13 +26,13 @@ class InstaxBLE:
         deviceAddress: if specified, will only connect to a printer with this address.
         printEnabled: by default, actual printing is disabled to prevent misprints.
         """
-        self.printerSettings = None
-        self.chunkSize = 0  # gets set from printer type
+        self.dummyPrinter = dummy_printer
+        self.printerSettings = PrinterSettings['mini'] if self.dummyPrinter else None
+        self.chunkSize = PrinterSettings['mini']['chunkSize'] if self.dummyPrinter else 0
         self.printEnabled = print_enabled
         self.peripheral = None
         self.deviceName = device_name.upper() if device_name else None
         self.deviceAddress = device_address.upper() if device_address else None
-        self.dummyPrinter = dummy_printer
         self.quiet = quiet
         self.image_path = image_path
         self.verbose = verbose if not self.quiet else False
@@ -45,7 +45,7 @@ class InstaxBLE:
         self.batteryPercentage = 0
         self.photosLeft = 0
         self.isCharging = False
-        self.imageSize = (0, 0)
+        self.imageSize = (PrinterSettings['mini']['width'], PrinterSettings['mini']['height']) if self.dummyPrinter else (0, 0)
         self.waitingForResponse = False
         self.cancelled = False
 
@@ -297,7 +297,7 @@ class InstaxBLE:
                 if not self.dummyPrinter:
                     self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
 
-            while self.waitingForResponse:
+            while self.waitingForResponse and not self.dummyPrinter and not self.cancelled:
                 sleep(0.05)
 
             if len(self.packetsForPrinting) > 0:
@@ -466,14 +466,11 @@ def main(args={}):
         # this script
 
         # instax.enable_printing()
-
         instax.connect()
-
         # Set a rainbow effect to be shown while printing and a pulsating
         # green effect when printing is done
         instax.send_led_pattern(LedPatterns.rainbow, when=1)
         instax.send_led_pattern(LedPatterns.pulseGreen, when=2)
-
         # you can also read the current accelerometer values if you want
         # while True:
         #     instax.get_printer_orientation()
