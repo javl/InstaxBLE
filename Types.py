@@ -18,6 +18,20 @@ from enum import Enum
 Imgproc_COLOR_RGB2YUV_YV12 = 131
 Imgproc_COLOR_BGR2YUV_YV12 = 132
 
+PrinterSettings = {
+    'mini': {
+        'chunkSize': 900,
+        'exampleImage': 'example-mini.jpg'
+    },
+    'square': {
+        'chunkSize': 1808,
+        'exampleImage': 'example-square.jpg'
+    },
+    'wide': {
+        'chunkSize': 1808,
+        'exampleImage': 'example-wide.jpg'
+    }
+}
 
 class EventType (Enum):
     """ Events we can send to the printer """
