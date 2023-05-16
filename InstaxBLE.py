@@ -11,50 +11,6 @@ import sys
 from PIL import Image
 from io import BytesIO
 
-def pil_image_to_bytes(img: Image.Image, max_size_kb: int = None) -> bytearray:
-    img_buffer = BytesIO()
-
-    # Convert the image to RGB mode if it's in RGBA mode
-    if img.mode == 'RGBA':
-        img = img.convert('RGB')
-
-    # Resize the image to 800x800 pixels
-    img = img.resize((800, 800), Image.ANTIALIAS)
-
-    def save_img_with_quality(quality):
-        img_buffer.seek(0)
-        img.save(img_buffer, format='JPEG', quality=quality)
-        return img_buffer.tell() / 1024
-
-    if max_size_kb is not None:
-        low_quality, high_quality = 1, 100
-        current_quality = 75
-        closest_quality = current_quality
-        min_target_size_kb = max_size_kb * 0.9
-
-        while low_quality <= high_quality:
-            output_size_kb = save_img_with_quality(current_quality)
-            print ("current output quality:", current_quality, " current size:", output_size_kb)
-
-            if output_size_kb <= max_size_kb and output_size_kb >= min_target_size_kb:
-                closest_quality = current_quality
-                break
-
-            if output_size_kb > max_size_kb:
-                high_quality = current_quality - 1
-            else:
-                low_quality = current_quality + 1
-
-            current_quality = (low_quality + high_quality) // 2
-            closest_quality = current_quality
-
-        # Save the image with the closest_quality
-        save_img_with_quality(closest_quality)
-    else:
-        img.save(img_buffer, format='JPEG')
-
-    return bytearray(img_buffer.getvalue())
-
 class InstaxBLE:
     def __init__(self,
                  device_address=None,
@@ -344,7 +300,7 @@ class InstaxBLE:
         imgData = imgSrc
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             image = Image.open(imgSrc)
-            image_byte_array = pil_image_to_bytes(image, max_size_kb=105)
+            image_byte_array = self.pil_image_to_bytes(image, max_size_kb=105)
             imgData = image_byte_array #self.image_to_bytes(imgSrc)
             self.log(f"len of imagedata: {len(imgData)}")
 
@@ -418,6 +374,50 @@ class InstaxBLE:
         self.send_packet(packet)
 
         self.get_printer_status()
+
+    def pil_image_to_bytes(self, img: Image.Image, max_size_kb: int = None) -> bytearray:
+        img_buffer = BytesIO()
+
+        # Convert the image to RGB mode if it's in RGBA mode
+        if img.mode == 'RGBA':
+            img = img.convert('RGB')
+
+        # Resize the image to 800x800 pixels
+        img = img.resize((800, 800), Image.ANTIALIAS)
+
+        def save_img_with_quality(quality):
+            img_buffer.seek(0)
+            img.save(img_buffer, format='JPEG', quality=quality)
+            return img_buffer.tell() / 1024
+
+        if max_size_kb is not None:
+            low_quality, high_quality = 1, 100
+            current_quality = 75
+            closest_quality = current_quality
+            min_target_size_kb = max_size_kb * 0.9
+
+            while low_quality <= high_quality:
+                output_size_kb = save_img_with_quality(current_quality)
+                self.log(f"current output quality: {current_quality}, current size: {output_size_kb}")
+
+                if output_size_kb <= max_size_kb and output_size_kb >= min_target_size_kb:
+                    closest_quality = current_quality
+                    break
+
+                if output_size_kb > max_size_kb:
+                    high_quality = current_quality - 1
+                else:
+                    low_quality = current_quality + 1
+
+                current_quality = (low_quality + high_quality) // 2
+                closest_quality = current_quality
+
+            # Save the image with the closest_quality
+            save_img_with_quality(closest_quality)
+        else:
+            img.save(img_buffer, format='JPEG')
+
+        return bytearray(img_buffer.getvalue())
 
 
 def main(args={}):
