@@ -310,7 +310,6 @@ class InstaxBLE:
         ]
 
         # divide image data up into chunks of <chunkSize> bytes and pad the last chunk with zeroes if needed
-        # chunkSize = 900
         imgDataChunks = [imgData[i:i + self.chunkSize] for i in range(0, len(imgData), self.chunkSize)]
         if len(imgDataChunks[-1]) < self.chunkSize:
             imgDataChunks[-1] = imgDataChunks[-1] + bytes(self.chunkSize - len(imgDataChunks[-1]))
@@ -356,15 +355,17 @@ class InstaxBLE:
             self.log(f"{i}: {service_uuid} {characteristic}")
 
     def get_printer_orientation(self):
+        """ Get the current XYZ orientation of the printer """
         packet = self.create_packet(EventType.XYZ_AXIS_INFO)
         self.send_packet(packet)
 
     def get_printer_status(self):
+        """ Get the printer's status"""
         packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, pack('>B', InfoType.PRINTER_FUNCTION_INFO.value))
         self.send_packet(packet)
 
     def get_printer_info(self):
-        """ Get and display the printer's function info """
+        """ Get and display the printer's status and info, like photos left and battery level """
         self.log("Getting function info...")
 
         packet = self.create_packet(EventType.SUPPORT_FUNCTION_INFO, pack('>B', InfoType.IMAGE_SUPPORT_INFO.value))
@@ -376,6 +377,7 @@ class InstaxBLE:
         self.get_printer_status()
 
     def pil_image_to_bytes(self, img: Image.Image, max_size_kb: int = None) -> bytearray:
+        """ Convert a PIL image to a bytearray """
         img_buffer = BytesIO()
 
         # Convert the image to RGB mode if it's in RGBA mode
