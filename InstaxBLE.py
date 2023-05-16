@@ -11,6 +11,7 @@ import sys
 from PIL import Image
 from io import BytesIO
 
+
 class InstaxBLE:
     def __init__(self,
                  device_address=None,
@@ -189,7 +190,7 @@ class InstaxBLE:
                     self.log(f"Found: {foundName} [{foundAddress}]")
                 if (self.deviceName and foundName.startswith(self.deviceName)) or \
                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
-                   (self.deviceName is None and self.deviceAddress is None and \
+                   (self.deviceName is None and self.deviceAddress is None and
                    foundName.startswith('INSTAX-') and foundName.endswith('(IOS)')):
                     # if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
                     #     to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
@@ -301,7 +302,7 @@ class InstaxBLE:
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             image = Image.open(imgSrc)
             image_byte_array = self.pil_image_to_bytes(image, max_size_kb=105)
-            imgData = image_byte_array #self.image_to_bytes(imgSrc)
+            imgData = image_byte_array  # self.image_to_bytes(imgSrc)
             self.log(f"len of imagedata: {len(imgData)}")
 
         self.packetsForPrinting = [
