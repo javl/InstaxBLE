@@ -1,4 +1,4 @@
-# Instax-Bluetooth
+# Instax-BLE
 
 <img align="right" style="margin:10px" src="https://github.com/javl/Instax-Bluetooth/blob/main/instax-bluetooth.gif?raw=true">
 
