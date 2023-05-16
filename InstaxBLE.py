@@ -486,7 +486,6 @@ def main(args={}):
             instax.print_image(instax.image_path)
         else:
             instax.print_image(instax.printerSettings['exampleImage'])
-        instax.disconnect()  # all done, disconnect
 
     except Exception as e:
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
