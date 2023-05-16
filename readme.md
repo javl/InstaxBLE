@@ -4,37 +4,50 @@
 
 ## Control your Instax Mini Link printer from Python
 
-This module can be used to control your Instax bluetooth printer from Python. I've only been able to test with the Instax Mini Link, but it should also work with other bluetooth Instax models, though you might have to experiment when using the Square or Wide models.
-
-Create an issue if you run into any trouble, but please read the rest of this readme first.
+This module can be used to control your Instax bluetooth printer from Python. Create an issue if you run into any trouble, but please read the rest of this readme first.
 
 Did you find this script useful? Feel free to support my open source software:
 
 ![GitHub Sponsor](https://img.shields.io/github/sponsors/javl?label=Sponsor&logo=GitHub)
 
 ### Supported printer models
-I've only been able to test the script with the `Instax Mini Link`, as that is the model I have, but it should also work with the `Instax Mini Link 2`, as well as the `Instax Mini LiPlay` camera. Some changes might be needed for the `Instax Wide` and `Instax Square` models though. @Fijifilm: feel free to send some of your other models my way ;)
+This script has been tested with the Instax Mini Link and the Instax Square Link, but should also work with the Mini Link 2 (should't be the same as Mini Link) and Wide Link (the code already contains wide specific settings). I'm unsure about some of the other models. If you have a different model let met know if this code works for you. If it doesn't you can find some info on recording the bluetooth data between your phone and the printer [here (Android)](https://github.com/javl/InstaxBLE/issues/4#issuecomment-1484123671) and [here (IOS)](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-751651250). The IOS logs are strongly prefered as Android uses a slightly different way of communicating.
+
+@Fijifilm: feel free to send some of your other models if you want me to support those as well ;)
+
+| Model | Tested |
+| --- | --- |
+| Instax Mini Link | :heavy_check_mark: |
+| Instax Mini Link 2 | :question: |
+| Instax Mini LiPlay | :question: |
+| Instax Square Link | :heavy_check_mark: |
+| Instax Square Wide | :question: |
+
 
 **Image sizes accepted by the printers**:
-* Link Mini: 600x800 px
-* Square: 800x800 px
-* Wide: 1260x800 px
+The script will automatically reduce filesize to match something the printer can handle by changing the quality of the image. It will also resize the image to fit the needed resolution, but for best results you might want to resize your image beforehand. Use the following sizes for your printer:
 
-If you have a different model let met know if this code works for you. If it doesn't you can find some info on recording the bluetooth data between your phone and the printer [here (Android)](https://github.com/javl/InstaxBLE/issues/4#issuecomment-1484123671) and [here (IOS)](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-751651250).
+| Model | Image size |
+| --- | --- |
+| Instax Mini Link | 600 x 800px |
+| Instax Mini Link 2 | 600 x 800px (guessed) |
+| Instax Mini LiPlay | 600 x 800px (guessed) |
+| Instax Square Link | 800 x 800px |
+| Instax Square Wide | 1260 x 800px |
 
 ### Alternatives
-Don't need Python and just want to print? Using [this website](https://instax-link-web.vercel.app/) you can print to your Instax straight from your browser (repo [over here](https://github.com/linssenste/instax-link-web)).
+Don't need Python and just want to print? [This website](https://instax-link-web.vercel.app/) based on Instax-BLE lets you print to your Instax printer straight from your browser (repo [over here](https://github.com/linssenste/instax-link-web)).
 Working with one of the older WiFi enabled Instax printers instead? Give [Instax-api](https://github.com/jpwsutton/instax_api) a try!.
 
 
 ### Installing and running
 
-    git clone https://github.com/javl/instax-bluetooth.git
-    cd instax-bluetooth
+    git clone https://github.com/javl/instax-ble.git
+    cd instax-ble
     python3 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
-    python3 instax-bluetooth.py
+    python3 instax-ble.py
 
 
 ### Useful to know
@@ -46,19 +59,25 @@ By default the `instax.print_image()` method will send all data to the printer _
     instax.connect()
     instax.enable_printing()  # allow printing
     instax.print_image('image.jpg')  # print image
+    instax.disconnect()  # all done, disconnect
+
 
 or
 
     instax = InstaxBLE(print_enabled=True)  # enable printing at creation time
     instax.connect()
     instax.print_image('image.jpg')  # print image
+    instax.disconnect()  # all done, disconnect
 
 #### 2. Connecting to a specific printer
 
 By default, this script will connect to the first Instax printer it can find, but you can also specify the name (`device_name`) or address (`device_address`) of the printer you want to connect to:
 
-    instax = InstaxBle()  # use the first printer you can find
-    instax = InstaxBle(device_name='INSTAX-12345678')  # you can ommit the (Android) or (IOS) part you might see in your Bluetooth settings
+    # use the first printer that we can find:
+    instax = InstaxBle()
+    # Connect to a printer by device name. Ommit the (Android) or (IOS) part you might see in your Bluetooth settings:
+    instax = InstaxBle(device_name='INSTAX-12345678')
+    # Connect to a printer by device address (probably starts with FA:AB:BC):
     instax = InstaxBle(device_address='FA:AB:BC:xx:xx:xx')
 
 #### 3. Gracefully disconnect on Exceptions
