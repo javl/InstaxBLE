@@ -311,10 +311,9 @@ class InstaxBLE:
 
         # divide image data up into chunks of <chunkSize> bytes and pad the last chunk with zeroes if needed
         # chunkSize = 900
-        chunkSize = 1808
-        imgDataChunks = [imgData[i:i + chunkSize] for i in range(0, len(imgData), chunkSize)]
-        if len(imgDataChunks[-1]) < chunkSize:
-            imgDataChunks[-1] = imgDataChunks[-1] + bytes(chunkSize - len(imgDataChunks[-1]))
+        imgDataChunks = [imgData[i:i + self.chunkSize] for i in range(0, len(imgData), self.chunkSize)]
+        if len(imgDataChunks[-1]) < self.chunkSize:
+            imgDataChunks[-1] = imgDataChunks[-1] + bytes(self.chunkSize - len(imgDataChunks[-1]))
 
         # create a packet from each of our chunks, this includes adding the chunk number
         for index, chunk in enumerate(imgDataChunks):
