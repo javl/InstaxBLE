@@ -271,12 +271,6 @@ class InstaxBLE:
             if not self.dummyPrinter:
                 self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
 
-    # TODO: printer doesn't seem to respond to this?
-    # async def shut_down(self):
-    #     """ Shut down the printer. """
-    #     packet = self.create_packet(EventType.SHUT_DOWN)
-    #     return self.send_packet(packet)
-
     def image_to_bytes(self, imagePath):
         """ Convert an image to a bytearray """
         imgdata = None
