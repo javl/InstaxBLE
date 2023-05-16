@@ -393,21 +393,16 @@ class InstaxBLE:
             image = Image.open(imgSrc)
             image_byte_array = pil_image_to_bytes(image, max_size_kb=105)
             imgData = image_byte_array #self.image_to_bytes(imgSrc)
-        if self.verbose:
-            print( "len of imagedata:", len(imgData))
+            self.log(f"len of imagedata: {len(imgData)}")
 
         self.packetsForPrinting = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00' + pack('>I', len(imgData)))
         ]
 
-        print( "print_images::0.2")
-
-
         # divide image data up into chunks of <chunkSize> bytes and pad the last chunk with zeroes if needed
         # chunkSize = 900
         chunkSize = 1808
         imgDataChunks = [imgData[i:i + chunkSize] for i in range(0, len(imgData), chunkSize)]
-        print( "print_images::1")
         if len(imgDataChunks[-1]) < chunkSize:
             imgDataChunks[-1] = imgDataChunks[-1] + bytes(chunkSize - len(imgDataChunks[-1]))
 
@@ -422,9 +417,7 @@ class InstaxBLE:
             self.packetsForPrinting.append(self.create_packet(EventType.PRINT_IMAGE))
             self.packetsForPrinting.append(self.create_packet((0, 2), b'\x02'))
         elif not self.quiet:
-            print("Printing is disabled, sending all packets except the actual print command")
-
-        print( "print_images::3")
+            self.log("Printing is disabled, sending all packets except the actual print command")
 
         # for packet in self.packetsForPrinting:
         #     self.log(self.prettify_bytearray(packet))
