@@ -104,26 +104,26 @@ It's recommended to wrap your code inside a `try / except / finally` loop so you
 ## Todo / Possible updates:
 
 #### Testing:
-- [x] Test on Linux
-- [x] Test on MacOS
-- [ ] Test on Raspberry Pi
-- [ ] Test on Windows
+- :heavy_check_mark: Test on Linux
+- :heavy_check_mark: Test on MacOS
+- :white_large_square: Test on Raspberry Pi
+- :white_large_square: Test on Windows
 
 #### Printer info:
 Some of these options have already been explored in other branches, but I need to bring them into the main branch.
-- [x] Get battery level
-- [x] Get number of photo's left in cartridge
-- [x] Get accelerometer data
-- [ ] Get button press
+- :heavy_check_mark: Get battery level
+- :heavy_check_mark: Get number of photo's left in cartridge
+- :heavy_check_mark: Get accelerometer data
+- :white_large_square: Get button press
 
 #### Image enhancements:
 I'm not sure what happens when you send a different filetype or image in landscape orientation, but assuming those will fail:
-- [ ] Resize if image too small or too large (needs to be 600x800 px)
-- [ ] Resize if file size too large (max 65535 bytes)
-- [ ] Auto rotate image to portrait before sending
-- [ ] Convert to jpg if given a different filetype
-- [ ] Strip exif data to decrease filesize
-- [ ] Automatically lower the quality of the image to keep images below the 65535 bytes (0xFF 0xFF) file limit
+- :heavy_check_mark: Resize if image too small or too large (actual size depending on printer model)
+- :heavy_check_mark: Resize if file size too large (max 65535 bytes)
+- :white_large_square: Auto rotate image to portrait before sending
+- :white_large_square: Convert to jpg if given a different filetype
+- :white_large_square: Strip exif data to decrease filesize
+- :heavy_check_mark: Automatically lower the quality of the image to keep images below the 65535 bytes (0xFF 0xFF) file limit
 
 
 #### Credit
