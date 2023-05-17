@@ -223,27 +223,31 @@ class InstaxBLE:
         """" Scan for our device and return it when found """
         self.log('Searching for instax printer...')
         secondsTried = 0
-        while True:
-            self.adapter.scan_for(2000)
-            peripherals = self.adapter.scan_get_results()
-            for peripheral in peripherals:
-                foundName = peripheral.identifier()
-                foundAddress = peripheral.address()
-                # if foundName.startswith('INSTAX'):
-                #     self.log(f"Found: {foundName} [{foundAddress}]")
-                if (self.deviceName and foundName.startswith(self.deviceName)) or \
-                   (self.deviceAddress and foundAddress == self.deviceAddress) or \
-                   (self.deviceName is None and self.deviceAddress is None and
-                   foundName.startswith('INSTAX-') and foundName.endswith('(IOS)')):
-                    # if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
-                    #     to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
-                    if peripheral.is_connectable():
-                        return peripheral
-                    elif not self.quiet:
-                        self.log(f"Can't connect to printer at{foundAddress}")
-            secondsTried += 2
-            if timeout != 0 and secondsTried >= timeout:
-                return None
+        try:
+            while True:
+                self.adapter.scan_for(2000)
+                peripherals = self.adapter.scan_get_results()
+                for peripheral in peripherals:
+                    foundName = peripheral.identifier()
+                    foundAddress = peripheral.address()
+                    # if foundName.startswith('INSTAX'):
+                    #     self.log(f"Found: {foundName} [{foundAddress}]")
+                    if (self.deviceName and foundName.startswith(self.deviceName)) or \
+                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
+                    (self.deviceName is None and self.deviceAddress is None and
+                    foundName.startswith('INSTAX-') and foundName.endswith('(IOS)')):
+                        # if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
+                        #     to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
+                        if peripheral.is_connectable():
+                            return peripheral
+                        elif not self.quiet:
+                            self.log(f"Can't connect to printer at {foundAddress}")
+                secondsTried += 2
+                if timeout != 0 and secondsTried >= timeout:
+                    return None
+        except KeyboardInterrupt:
+            self.disconnect()
+            sys.exit()
 
     def create_color_payload(self, colorArray, speed, repeat, when):
         """
