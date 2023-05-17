@@ -26,19 +26,21 @@ class InstaxBLE:
         deviceAddress: if specified, will only connect to a printer with this address.
         printEnabled: by default, actual printing is disabled to prevent misprints.
         """
+        # BLE
+        self.serviceUUID = '70954782-2d83-473d-9e5f-81e1d02d5273'
+        self.writeCharUUID = '70954783-2d83-473d-9e5f-81e1d02d5273'
+        self.notifyCharUUID = '70954784-2d83-473d-9e5f-81e1d02d5273'
+        self.peripheral = None
+
+        self.quiet = quiet
         self.dummyPrinter = dummy_printer
         self.printerSettings = PrinterSettings['mini'] if self.dummyPrinter else None
         self.chunkSize = PrinterSettings['mini']['chunkSize'] if self.dummyPrinter else 0
         self.printEnabled = print_enabled
-        self.peripheral = None
         self.deviceName = device_name.upper() if device_name else None
         self.deviceAddress = device_address.upper() if device_address else None
-        self.quiet = quiet
         self.image_path = image_path
         self.verbose = verbose if not self.quiet else False
-        self.serviceUUID = '70954782-2d83-473d-9e5f-81e1d02d5273'
-        self.writeCharUUID = '70954783-2d83-473d-9e5f-81e1d02d5273'
-        self.notifyCharUUID = '70954784-2d83-473d-9e5f-81e1d02d5273'
         self.packetsForPrinting = []
         self.pos = (0, 0, 0, 0)
         self.batteryState = 0
@@ -66,6 +68,17 @@ class InstaxBLE:
         if self.verbose:
             print(msg)
 
+    def display_current_status(self):
+        """ Display an overview of the current printer state """
+        print("\nPrinter details: ")
+        # print(f"Device name:         {self.printerSettings['modelName']}")
+        print(f"Model:               {self.printerSettings['modelName']}")
+        print(f"Photos left:         {self.photosLeft}/10")
+        print(f"Battery level:       {self.batteryPercentage}%")
+        print(f"Charging:            {self.isCharging}")
+        print(f"Required image size: {self.printerSettings['width']}x{self.printerSettings['height']}px")
+        print("")
+
     def parse_printer_response(self, event, packet):
         """ Parse the response packet and print the result """
         # todo: create parsers for the different types of responses
@@ -85,7 +98,7 @@ class InstaxBLE:
             if infoType == InfoType.IMAGE_SUPPORT_INFO:
                 w, h = unpack_from('>HH', packet[8:12])
                 # self.log(self.prettify_bytearray(packet[8:12]))
-                self.log(f'image size: {w}x{h}')
+                # self.log(f'image size: {w}x{h}')
                 self.imageSize = (w, h)
                 if (w, h) == (600, 800):
                     self.printerSettings = PrinterSettings['mini']
@@ -100,16 +113,16 @@ class InstaxBLE:
 
             elif infoType == InfoType.BATTERY_INFO:
                 self.batteryState, self.batteryPercentage = unpack_from('>BB', packet[8:10])
-                self.log(f'battery state: {self.batteryState}, battery percentage: {self.batteryPercentage}')
+                # self.log(f'battery state: {self.batteryState}, battery percentage: {self.batteryPercentage}')
             elif infoType == InfoType.PRINTER_FUNCTION_INFO:
                 dataByte = packet[8]
                 self.photosLeft = dataByte & 15
                 self.isCharging = (1 << 7) & dataByte >= 1
-                self.log(f'photos left: {self.photosLeft}')
-                if self.isCharging:
-                    self.log('Printer is charging')
-                else:
-                    self.log('Printer is running on battery')
+                # self.log(f'photos left: {self.photosLeft}')
+                # if self.isCharging:
+                #     self.log('Printer is charging')
+                # else:
+                #     self.log('Printer is running on battery')
 
         elif event == EventType.PRINT_IMAGE_DOWNLOAD_START:
             pass
@@ -162,14 +175,19 @@ class InstaxBLE:
         self.peripheral = self.find_device(timeout=timeout)
         if self.peripheral:
             try:
-                self.log(f"\n\nConnecting to: {self.peripheral.identifier()} [{self.peripheral.address()}]")
+                self.log(f"Connecting to: {self.peripheral.identifier()} [{self.peripheral.address()}]")
                 self.peripheral.connect()
             except Exception as e:
                 if not self.quiet:
                     self.log(f'error on connecting: {e}')
 
             if self.peripheral.is_connected():
-                self.log(f"Connected (mtu: {self.peripheral.mtu()})")
+                # check if we're using a version of simplepyble that supports reading mtu
+                if self.peripheral.mtu:
+                    self.log(f"Connected (mtu: {self.peripheral.mtu()})")
+                else:
+                    self.log(f"Connected")
+
                 self.log('Attaching notification_handler')
                 try:
                     self.peripheral.notify(self.serviceUUID, self.notifyCharUUID, self.notification_handler)
@@ -179,6 +197,7 @@ class InstaxBLE:
                         return
 
                 self.get_printer_info()
+                self.display_current_status()
 
     def disconnect(self):
         """ Disconnect from the printer (if connected) """
@@ -202,7 +221,7 @@ class InstaxBLE:
 
     def find_device(self, timeout=0):
         """" Scan for our device and return it when found """
-        self.log('Looking for instax printer...')
+        self.log('Searching for instax printer...')
         secondsTried = 0
         while True:
             self.adapter.scan_for(2000)
@@ -210,8 +229,8 @@ class InstaxBLE:
             for peripheral in peripherals:
                 foundName = peripheral.identifier()
                 foundAddress = peripheral.address()
-                if foundName.startswith('INSTAX'):
-                    self.log(f"Found: {foundName} [{foundAddress}]")
+                # if foundName.startswith('INSTAX'):
+                #     self.log(f"Found: {foundName} [{foundAddress}]")
                 if (self.deviceName and foundName.startswith(self.deviceName)) or \
                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
                    (self.deviceName is None and self.deviceAddress is None and
@@ -221,8 +240,8 @@ class InstaxBLE:
                     if peripheral.is_connectable():
                         return peripheral
                     elif not self.quiet:
-                        self.log(f"Printer at {foundAddress} is not connectable")
-            secondsTried += 1
+                        self.log(f"Can't connect to printer at{foundAddress}")
+            secondsTried += 2
             if timeout != 0 and secondsTried >= timeout:
                 return None
 
