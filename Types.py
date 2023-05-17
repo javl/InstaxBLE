@@ -21,15 +21,21 @@ Imgproc_COLOR_BGR2YUV_YV12 = 132
 PrinterSettings = {
     'mini': {
         'chunkSize': 900,
-        'exampleImage': 'example-mini.jpg'
+        'exampleImage': 'example-mini.jpg',
+        'width': 600,
+        'height': 800
     },
     'square': {
         'chunkSize': 1808,
-        'exampleImage': 'example-square.jpg'
+        'exampleImage': 'example-square.jpg',
+        'width': 800,
+        'height': 800
     },
     'wide': {
         'chunkSize': 1808,
-        'exampleImage': 'example-wide.jpg'
+        'exampleImage': 'example-wide.jpg',
+        'width': 800,
+        'height': 600
     }
 }
 
