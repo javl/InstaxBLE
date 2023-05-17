@@ -20,24 +20,35 @@ Imgproc_COLOR_BGR2YUV_YV12 = 132
 
 PrinterSettings = {
     'mini': {
+        'modelName': 'Instax Mini Link',
         'chunkSize': 900,
         'exampleImage': 'example-mini.jpg',
         'width': 600,
         'height': 800
     },
     'square': {
+        'modelName': 'Instax Square Link',
         'chunkSize': 1808,
         'exampleImage': 'example-square.jpg',
         'width': 800,
         'height': 800
     },
     'wide': {
+        'modelName': 'Instax Wide Link',
         'chunkSize': 1808,
         'exampleImage': 'example-wide.jpg',
         'width': 800,
         'height': 600
+    },
+    'dummy': {
+        'modelName': 'Dummy Printer',
+        'chunkSize': 123,
+        'exampleImage': 'example-mini.jpg',
+        'width': 10,
+        'height': 20
     }
 }
+
 
 class EventType (Enum):
     """ Events we can send to the printer """
