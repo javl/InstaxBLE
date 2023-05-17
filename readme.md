@@ -82,7 +82,7 @@ By default, this script will connect to the first Instax printer it can find, bu
 
 #### 3. Gracefully disconnect on Exceptions
 
-It's recommended to wrap your code inside a `try ... catch` loop so you can catch any errors (or `KeyboardInterrupt`) and disconnect from the printer gracefully before dropping out of your code. Otherwise your printer will think it's still connected and you'll have to manually restart it to reconnect.
+It's recommended to wrap your code inside a `try / except / finally` loop so you can catch any errors (or `KeyboardInterrupt`s) and disconnect from the printer gracefully before dropping out of your code. Otherwise you might have to manually restart your printer for it to connect again.
 
         try:
             instax = InstaxBle()
