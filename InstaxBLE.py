@@ -85,8 +85,7 @@ class InstaxBLE:
         """ Parse the response packet and print the result """
         self.log(f"event: {event}")
         self.waitingForResponse = False
-        # todo: create parsers for the different types of responses
-        # Placeholder for a later update
+
         if event == EventType.XYZ_AXIS_INFO:
             x, y, z, o = unpack_from('<hhhB', packet[6:-1])
             self.pos = (x, y, z, o)
@@ -328,14 +327,14 @@ class InstaxBLE:
             self.waitingForResponse = True
             smallPacketSize = 182
             numberOfParts = ceil(len(packet) / smallPacketSize)
-            self.log(f"> number of parts to send: {numberOfParts}")
+            # self.log(f"> number of parts to send: {numberOfParts}")
             for subPartIndex in range(numberOfParts):
                 # self.log((subPartIndex + 1), '/', numberOfParts)
                 subPacket = packet[subPartIndex * smallPacketSize:subPartIndex * smallPacketSize + smallPacketSize]
 
                 if not self.dummyPrinter:
                     self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
-            self.log('sent')
+            # self.log('sent')
             while self.waitingForResponse and not self.dummyPrinter and not self.cancelled:
                 self.log("sleep")
                 sleep(0.05)
@@ -469,7 +468,7 @@ class InstaxBLE:
 
             while low_quality <= high_quality:
                 output_size_kb = save_img_with_quality(current_quality)
-                self.log(f"current output quality: {current_quality}, current size: {output_size_kb}")
+                # self.log(f"current output quality: {current_quality}, current size: {output_size_kb}")
 
                 if output_size_kb <= max_size_kb and output_size_kb >= min_target_size_kb:
                     closest_quality = current_quality
