@@ -1,2 +1,3 @@
 Pillow==9.5.0
-simplepyble==0.6.1
+pycodestyle==2.10.0
+simplepyble==0.6.2.dev2
