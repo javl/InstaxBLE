@@ -130,8 +130,6 @@ class InstaxBLE:
         elif event == EventType.PRINT_IMAGE_DOWNLOAD_START:
             self.log(f"Img packets left to send: {len(self.packetsForPrinting)}")
             if len(self.packetsForPrinting) > 0 and not self.cancelled:
-                # if len(self.packetsForPrinting) % 10 == 0:
-                #     self.log(f"Img packets left to send: {len(self.packetsForPrinting)}")
                 print("send next packet")
                 packet = self.packetsForPrinting.pop(0)
                 self.send_packet(packet)
