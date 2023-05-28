@@ -167,7 +167,7 @@ class InstaxBLE:
                 self.log("\tResponse packet checksum was invalid!")
                 return
 
-        header, length, op1, op2 = unpack_from('<HHBB', packet)
+        header, length, op1, op2 = unpack_from('>HHBB', packet)
         # self.log('\theader: ', header, '\t', self.prettify_bytearray(packet[0:2]))
         # self.log('\tlength: ', length, '\t', self.prettify_bytearray(packet[2:4]))
         # self.log('\top1: ', op1, '\t\t', self.prettify_bytearray(packet[4:5]))
@@ -313,7 +313,7 @@ class InstaxBLE:
             elif not self.peripheral.is_connected():
                 self.log("peripheral not connected")
 
-        header, length, op1, op2 = unpack_from('<HHBB', packet)
+        header, length, op1, op2 = unpack_from('>HHBB', packet)
         try:
             event = EventType((op1, op2))
         except Exception:
