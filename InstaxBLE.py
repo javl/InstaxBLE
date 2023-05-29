@@ -140,6 +140,7 @@ class InstaxBLE:
             pass
 
         elif event == EventType.PRINT_IMAGE:
+            self.log('received print confirmation')
             pass
 
         else:
@@ -172,7 +173,7 @@ class InstaxBLE:
 
         try:
             event = EventType((op1, op2))
-            # self.log(f'\tevent: {event}')
+            # self.log(f'\tResponse event: {event}')
         except ValueError:
             self.log(f"Unknown EventType: ({op1}, {op2})")
             return
@@ -214,9 +215,9 @@ class InstaxBLE:
             return
         if self.peripheral:
             if self.peripheral.is_connected():
-                if len(self.packetsForPrinting) > 0 and not self.cancelled:
-                    self.log('sending cancel command')
-                    self.send_packet(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_CANCEL))
+                # if len(self.packetsForPrinting) > 0 and not self.cancelled:
+                #     self.log('sending cancel command')
+                #     self.send_packet(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_CANCEL))
                 self.log('Disconnecting...')
                 self.peripheral.disconnect()
                 self.log("Disconnected")
@@ -316,15 +317,19 @@ class InstaxBLE:
             elif not self.peripheral.is_connected():
                 self.log("peripheral not connected")
 
-        header, length, op1, op2 = unpack_from('>HHBB', packet)
         try:
-            event = EventType((op1, op2))
-        except Exception:
-            event = 'Unknown event'
+            while self.waitingForResponse and not self.dummyPrinter and not self.cancelled:
+                # self.log("sleep")
+                sleep(0.05)
 
-        # self.log(f'sending eventtype: {event}')
+            header, length, op1, op2 = unpack_from('>HHBB', packet)
+            try:
+                event = EventType((op1, op2))
+            except Exception:
+                event = 'Unknown event'
 
-        try:
+            # self.log(f'sending eventtype: {event}')
+
             self.waitingForResponse = True
             smallPacketSize = 182
             numberOfParts = ceil(len(packet) / smallPacketSize)
@@ -335,14 +340,11 @@ class InstaxBLE:
 
                 if not self.dummyPrinter:
                     self.peripheral.write_command(self.serviceUUID, self.writeCharUUID, subPacket)
-            # self.log('sent')
-            while self.waitingForResponse and not self.dummyPrinter and not self.cancelled:
-                self.log("sleep")
-                sleep(0.05)
 
         except KeyboardInterrupt:
             self.cancelled = True
             self.cancel_print()
+            # sleep(1)
             self.disconnect()
             sys.exit('Cancelled')
 
