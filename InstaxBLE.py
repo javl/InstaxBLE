@@ -361,8 +361,7 @@ class InstaxBLE:
         imgData = imgSrc
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             image = Image.open(imgSrc)
-            image_byte_array = self.pil_image_to_bytes(image, max_size_kb=105)
-            imgData = image_byte_array  # self.image_to_bytes(imgSrc)
+            imgData = self.pil_image_to_bytes(image, max_size_kb=105)
             # self.log(f"len of imagedata: {len(imgData)}")
         self.packetsForPrinting = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00' + pack('>I', len(imgData)))
