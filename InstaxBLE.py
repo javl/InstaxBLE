@@ -518,10 +518,8 @@ def main(args={}):
         # passing the image_path as an argument when calling
         # this script, or by specifying the path in your code
         if instax.image_path:
-            print("has own image path")
             instax.print_image(instax.image_path)
         else:
-            print('use example image')
             instax.print_image(instax.printerSettings['exampleImage'])
 
     except Exception as e:
