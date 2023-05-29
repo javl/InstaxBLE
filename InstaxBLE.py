@@ -83,7 +83,7 @@ class InstaxBLE:
 
     def parse_printer_response(self, event, packet):
         """ Parse the response packet and print the result """
-        self.log(f"event: {event}")
+        # self.log(f"event: {event}")
         self.waitingForResponse = False
 
         if event == EventType.XYZ_AXIS_INFO:
@@ -128,11 +128,7 @@ class InstaxBLE:
                 #     self.log('Printer is running on battery')
 
         elif event == EventType.PRINT_IMAGE_DOWNLOAD_START:
-            self.log(f"Img packets left to send: {len(self.packetsForPrinting)}")
-            if len(self.packetsForPrinting) > 0 and not self.cancelled:
-                print("send next packet")
-                packet = self.packetsForPrinting.pop(0)
-                self.send_packet(packet)
+            self.handle_image_packet_queue()
 
         elif event == EventType.PRINT_IMAGE_DOWNLOAD_DATA:
             self.handle_image_packet_queue()
