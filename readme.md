@@ -18,10 +18,10 @@ This script has been tested with the Instax Mini Link and the Instax Square Link
 | Model | Tested |
 | --- | --- |
 | Instax Mini Link | :heavy_check_mark: |
-| Instax Mini Link 2 | :question: |
-| Instax Mini LiPlay | :question: |
+| Instax Mini Link 2 | :white_circle: |
+| Instax Mini LiPlay | :white_circle: |
 | Instax Square Link | :heavy_check_mark: |
-| Instax Square Wide | :question: |
+| Instax Square Wide | :white_circle: |
 
 
 **Image sizes accepted by the printers**:
