@@ -365,7 +365,7 @@ class InstaxBLE:
         print an image. Either pass a path to an image (as a string) or pass
         the bytearray to print directly
         """
-        print(f'printing image "{imgSrc}"')
+        self.log(f'printing image "{imgSrc}"')
         if self.photosLeft == 0 and not self.dummyPrinter:
             self.log("Can't print: no photos left")
             return
@@ -404,7 +404,6 @@ class InstaxBLE:
         # send the first packet from our list, the packet handler will take care of the rest
         if not self.dummyPrinter:
             packet = self.packetsForPrinting.pop(0)
-            print("sending first of image")
             self.send_packet(packet)
             # try:
             #     while len(self.packetsForPrinting) > 0:
@@ -529,6 +528,8 @@ def main(args={}):
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
         instax.log(f'Error: {e}')
     finally:
+        sleep(60)
+        print('finally, disconnect')
         instax.disconnect()  # all done, disconnect
 
 
