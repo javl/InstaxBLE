@@ -348,18 +348,6 @@ class InstaxBLE:
             self.disconnect()
             sys.exit('Cancelled')
 
-    def image_to_bytes(self, imagePath):
-        """ Convert an image to a bytearray """
-        imgdata = None
-        try:
-            # TODO: I think returning image.read() already returns bytes so no need for bytearray?
-            with open(imagePath, "rb") as image:
-                imgdata = bytearray(image.read())
-            return imgdata
-        except Exception as e:
-            if not self.quiet:
-                self.log(f'Error loading image: {e}')
-
     def print_image(self, imgSrc):
         """
         print an image. Either pass a path to an image (as a string) or pass
