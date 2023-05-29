@@ -225,6 +225,11 @@ class InstaxBLE:
                 self.peripheral.disconnect()
                 self.log("Disconnected")
 
+    def cancel_print(self):
+        self.packetsForPrinting = []
+        self.waitingForResponse = False
+        self.send_packet(self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_CANCEL))
+
     def enable_printing(self):
         """ Enable printing. """
         self.printEnabled = True
@@ -260,6 +265,7 @@ class InstaxBLE:
                 if timeout != 0 and secondsTried >= timeout:
                     return None
         except KeyboardInterrupt:
+            self.cancel_print()
             self.disconnect()
             sys.exit()
 
@@ -340,6 +346,7 @@ class InstaxBLE:
 
         except KeyboardInterrupt:
             self.cancelled = True
+            self.cancel_print()
             self.disconnect()
             sys.exit('Cancelled')
 
