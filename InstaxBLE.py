@@ -249,9 +249,9 @@ class InstaxBLE:
                     # if foundName.startswith('INSTAX'):
                     #     self.log(f"Found: {foundName} [{foundAddress}]")
                     if (self.deviceName and foundName.startswith(self.deviceName)) or \
-                    (self.deviceAddress and foundAddress == self.deviceAddress) or \
-                    (self.deviceName is None and self.deviceAddress is None and
-                    foundName.startswith('INSTAX-') and foundName.endswith('(IOS)')):
+                       (self.deviceAddress and foundAddress == self.deviceAddress) or \
+                       (self.deviceName is None and self.deviceAddress is None and
+                       foundName.startswith('INSTAX-') and foundName.endswith('(IOS)')):
                         # if foundAddress.startswith('FA:AB:BC'):  # start of IOS endpooint
                         #     to convert to ANDROID endpoint, replace 'FA:AB:BC' with '88:B4:36')
                         if peripheral.is_connectable():
