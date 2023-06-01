@@ -13,7 +13,7 @@ Did you find this script useful? Feel free to support my open source software:
 ### Supported printer models
 This script has been tested with the Instax Mini Link and the Instax Square Link, but should also work with the Mini Link 2 (should't be the same as Mini Link) and Wide Link (the code already contains wide specific settings). I'm unsure about some of the other models. If you have a different model let met know if this code works for you. If it doesn't you can find some info on recording the bluetooth data between your phone and the printer [here (Android)](https://github.com/javl/InstaxBLE/issues/4#issuecomment-1484123671) and [here (IOS)](https://github.com/jpwsutton/instax_api/issues/21#issuecomment-751651250). The IOS logs are strongly prefered as Android uses a slightly different way of communicating.
 
-@Fijifilm: feel free to send some of your other models if you want me to support those as well ;)
+@ Fuijfilm: feel free to send some of your other models if you want me to support those as well ;)
 
 | Model | Tested |
 | --- | --- |
@@ -96,10 +96,7 @@ It's recommended to wrap your code inside a `try / except / finally` loop so you
 
 ### Notes on usage
 
-1. The printer only works with .jpg images. I haven't actually tested this, but the printer code seems to suggest this.
-2. The script does not yet check if your image is the right size or orientation. I've tested printing with images that are 600x800 pixels and don't know what happens when you send your image in landscape orientation so you might want to rotate it beforehand.
-3. Your image should be 65535 bytes or less.
-4. For faster (and possibly more reliable) printing remove any exifdata from your image. This will reduce the amount of data that needs to be send to the device. This also leaves more space for the image itself.
+The final image send to the printer should be a JPEG at a specific size (depends on the printer model, see the list above). This script will convert and resize your image if needed, but for best results you might want to prepare the image in the right format yourself. Just keep that in mind if you get unexpected results in quality. I also don't know what happens when you try to print an image in the wrong orientation.
 
 ## Todo / Possible updates:
 
