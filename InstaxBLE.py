@@ -107,7 +107,7 @@ class InstaxBLE:
                     self.printerSettings = PrinterSettings['mini']
                 elif (w, h) == (800, 800):
                     self.printerSettings = PrinterSettings['square']
-                elif (w, h) == (1280, 800):
+                elif (w, h) == (1260, 800):
                     self.printerSettings = PrinterSettings['wide']
                 else:
                     exit(f'Unknown image size from printer: {w}x{h}')
