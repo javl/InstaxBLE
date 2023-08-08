@@ -37,8 +37,8 @@ PrinterSettings = {
         'modelName': 'Instax Wide Link',
         'chunkSize': 1808,
         'exampleImage': 'example-wide.jpg',
-        'width': 800,
-        'height': 600
+        'width': 1260,
+        'height': 800
     },
     'dummy': {
         'modelName': 'Dummy Printer',
