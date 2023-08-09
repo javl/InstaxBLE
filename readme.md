@@ -21,7 +21,7 @@ This script has been tested with the Instax Mini Link and the Instax Square Link
 | Instax Mini Link 2 | :white_circle: |
 | Instax Mini LiPlay | :white_circle: |
 | Instax Square Link | :heavy_check_mark: |
-| Instax Square Wide | :white_circle: |
+| Instax Square Wide | :heavy_check_mark: |
 
 
 ### Image sizes accepted by the printers
@@ -34,7 +34,7 @@ The needed image sizes are:
 | Instax Mini Link 2 | 600 x 800px (a guess) |
 | Instax Mini LiPlay | 600 x 800px (a guess) |
 | Instax Square Link | 800 x 800px |
-| Instax Square Wide | 1260 x 800px |
+| Instax Square Wide | 1260 x 840px |
 
 ### Alternatives
 Don't need Python and just want to print? [This website](https://instax-link-web.vercel.app/) based on Instax-BLE lets you print to your Instax printer straight from your browser (repo [over here](https://github.com/linssenste/instax-link-web)).
