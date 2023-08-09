@@ -38,7 +38,7 @@ PrinterSettings = {
         'chunkSize': 900,
         'exampleImage': 'example-wide.jpg',
         'width': 1260,
-        'height': 800
+        'height': 840
     },
     'dummy': {
         'modelName': 'Dummy Printer',
