@@ -37,7 +37,7 @@ The needed image sizes are:
 | Instax Square Wide | 1260 x 840px |
 
 ### Alternatives
-Don't need Python and just want to print? [This website](https://instax-link-web.vercel.app/) based on Instax-BLE lets you print to your Instax printer straight from your browser (repo [over here](https://github.com/linssenste/instax-link-web)).
+Don't need Python and just want to print? [This website](https://instax-link-web.vercel.app/) [repo here](https://github.com/linssenste/instax-link-web) based on InstaxBLE lets you print to your Instax printer straight from your browser (repo [over here](https://github.com/linssenste/instax-link-web)).
 Working with one of the older WiFi enabled Instax printers instead? Give [Instax-api](https://github.com/jpwsutton/instax_api) a try!.
 
 
