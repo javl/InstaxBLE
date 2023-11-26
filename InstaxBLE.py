@@ -8,6 +8,7 @@ import argparse
 import LedPatterns
 import simplepyble
 import sys
+import threading
 from PIL import Image
 from io import BytesIO
 
@@ -21,6 +22,7 @@ class InstaxBLE:
                  verbose=False,
                  quiet=False,
                  image_path=None):
+        self.done_event = threading.Event()
         """
         Initialize the InstaxBLE class.
         deviceAddress: if specified, will only connect to a printer with this address.
