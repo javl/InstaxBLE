@@ -207,6 +207,7 @@ class InstaxBLE:
                         return
 
                 self.get_printer_info()
+                sleep(1)
                 self.display_current_status()
 
     def disconnect(self):
