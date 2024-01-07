@@ -13,14 +13,15 @@ from io import BytesIO
 
 
 class InstaxBLE:
-    def __init__(self,
-                 device_address=None,
-                 device_name=None,
-                 print_enabled=False,
-                 dummy_printer=True,
-                 verbose=False,
-                 quiet=False,
-                 image_path=None):
+    def __init__(
+        self,
+        device_address=None,
+        device_name=None,
+        print_enabled=False,
+        dummy_printer=True,
+        verbose=False,
+        quiet=False,
+        image_path=None):
         """
         Initialize the InstaxBLE class.
         deviceAddress: if specified, will only connect to a printer with this address.
