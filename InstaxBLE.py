@@ -3,9 +3,19 @@
 from math import ceil
 from struct import pack, unpack_from
 from time import sleep
-from Types import EventType, InfoType, PrinterSettings
+
+# Try to import Types with a relative import first
+try:
+    from .Types import EventType, InfoType, PrinterSettings
+    from . import LedPatterns
+except ImportError:
+    # If that fails (which it will if this file is being run directly),
+    # try an absolute import instead
+    from Types import EventType, InfoType, PrinterSettings
+    import LedPatterns
+
 import argparse
-import LedPatterns
+
 import simplepyble
 import sys
 from PIL import Image
@@ -364,7 +374,12 @@ class InstaxBLE:
         if isinstance(imgSrc, str):  # if it's a path, load the image contents
             image = Image.open(imgSrc)
             imgData = self.pil_image_to_bytes(image, max_size_kb=105)
-            # self.log(f"len of imagedata: {len(imgData)}")
+        elif isinstance(imgSrc, BytesIO):
+            imgSrc.seek(0)  # Go to the start of the BytesIO object
+            image = Image.open(imgSrc)
+            imgData = self.pil_image_to_bytes(image, max_size_kb=105)
+
+        # self.log(f"len of imagedata: {len(imgData)}")
         self.packetsForPrinting = [
             self.create_packet(EventType.PRINT_IMAGE_DOWNLOAD_START, b'\x02\x00\x00\x00' + pack('>I', len(imgData)))
         ]
