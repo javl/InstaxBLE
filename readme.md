@@ -25,7 +25,7 @@ This script has been tested with the Instax Mini Link and the Instax Square Link
 
 
 ### Image sizes accepted by the printers
-The image send to the printer should be a JPEG at a specific image size, depending on the printer model. This script will automatically convert, resize and reduce quality to match the required specifications. For best results though, ypou might want to prepare your image yourself beforehand so you keep control over the settings. 
+The image send to the printer should be a JPEG at a specific image size, depending on the printer model. This script will automatically convert, resize and reduce quality to match the required specifications. For best results though, ypou might want to prepare your image yourself beforehand so you keep control over the settings.
 The needed image sizes are:
 
 | Model | Image size |
@@ -42,16 +42,16 @@ Working with one of the older WiFi enabled Instax printers instead? Give [Instax
 
 
 ### Installing and running
-    
+
     # Clone the repo
     git clone https://github.com/javl/InstaxBLE.git
     cd InstaxBLE
-    
+
     # create a virtual environment and install the needed dependencies
     python3 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
-    
+
     # Run the example
     python3 instax-ble.py
 
@@ -103,6 +103,14 @@ It's recommended to wrap your code inside a `try / except / finally` loop so you
 ### Notes on usage
 
 The final image send to the printer should be a JPEG at a specific size (depends on the printer model, see the list above). This script will convert and resize your image if needed, but for best results you might want to prepare the image in the right format yourself. Just keep that in mind if you get unexpected results in quality. I also don't know what happens when you try to print an image in the wrong orientation.
+
+### Using InstaxBLE in your own project
+One of the simplest ways to use InstaxBLE in your own project is to put the InstaxBLE folder inside your own project folder and import it:
+
+    from InstaxBLE.InstaxBLE import InstaxBLE
+    instax = InstaxBLE()
+    # the rest of your script
+    # see the main() function in InstaxBLE.py for an example
 
 ## Todo / Possible updates:
 
