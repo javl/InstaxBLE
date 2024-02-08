@@ -28,7 +28,7 @@ class InstaxBLE:
         device_address=None,
         device_name=None,
         print_enabled=False,
-        dummy_printer=True,
+        dummy_printer=False,
         verbose=False,
         quiet=False,
         image_path=None):
