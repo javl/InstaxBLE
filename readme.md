@@ -8,7 +8,7 @@ This module can be used to control your Instax bluetooth printer (**Mini**, **Sq
 
 Did you find this script useful? Feel free to support my open source software:
 
-![GitHub Sponsor](https://img.shields.io/github/sponsors/javl?label=Sponsor&logo=GitHub)
+[![GitHub Sponsor](https://img.shields.io/github/sponsors/javl?label=Sponsor&logo=GitHub)](https://github.com/sponsors/javl)
 
 Don't need a whole Python script and just want to print? [This website](https://instax-link-web.vercel.app/) based on InstaxBLE lets you print to your Instax printer straight from your browser (repo [over here](https://github.com/linssenste/instax-link-web)).
 
