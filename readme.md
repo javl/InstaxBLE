@@ -24,7 +24,7 @@ Do you have an older **WIFI** printer instead? Try [Instax-api](https://github.c
 | --- | --- |
 | Instax Mini Link | :heavy_check_mark: |
 | Instax Mini Link 2 | :white_circle: |
-| Instax Mini LiPlay | :white_circle: |
+| Instax Mini LiPlay | :heavy_check_mark: |
 | Instax Square Link | :heavy_check_mark: |
 | Instax Square Wide | :heavy_check_mark: |
 
