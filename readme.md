@@ -67,6 +67,7 @@ By default the `instax.print_image()` method will send all data to the printer _
     instax.connect()
     instax.enable_printing()  # allow printing
     instax.print_image('image.jpg')  # print image
+    instax.wait_one_minute()  # hacky way of preventing disconnecting too soon
     instax.disconnect()  # all done, disconnect
 
 or
@@ -74,6 +75,7 @@ or
     instax = InstaxBLE(print_enabled=True)  # enable printing at initialization
     instax.connect()
     instax.print_image('image.jpg')  # print image
+    instax.wait_one_minute()  # hacky way of preventing disconnecting too soon
     instax.disconnect()  # all done, disconnect
 
 #### 2. Connecting to a specific printer
@@ -116,7 +118,7 @@ _Please let me know if you've managed to use this code on an unchecked platform_
 - :heavy_check_mark: Test on Linux
 - :heavy_check_mark: Test on MacOS
 - :white_large_square: Test on Raspberry Pi
-- :white_large_square: Test on Windows
+- :heavy_check_mark: Test on Windows
 
 #### Printer info:
 Some of these options have already been explored in other branches, but I need to bring them into the main branch.
