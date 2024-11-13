@@ -98,6 +98,7 @@ It's recommended to wrap your code inside a `try / except / finally` loop so you
             instax.connect()
             instax.enable_printing()
             instax.print_image('image.jpg')
+            instax.wait_one_minute()
         except Exception as e:
             print(e)
         finally:

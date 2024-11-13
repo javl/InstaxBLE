@@ -531,12 +531,12 @@ def main(args={}):
             instax.print_image(instax.image_path)
         else:
             instax.print_image(instax.printerSettings['exampleImage'])
+        instax.wait_one_minute()
 
     except Exception as e:
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
         instax.log(f'Error: {e}')
     finally:
-        instax.wait_one_minute()
         print('finally, disconnect')
         instax.disconnect()  # all done, disconnect
 
