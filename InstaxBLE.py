@@ -497,6 +497,12 @@ class InstaxBLE:
 
         return bytearray(img_buffer.getvalue())
 
+    def wait_one_minute(self):
+        """ Wait for one minute. Hacky way of preventing disconnecting too soon """
+        if not self.quiet:
+            print("Waiting for one minute...")
+        sleep(60)
+
 
 def main(args={}):
     """ Example usage of the InstaxBLE class """
@@ -530,7 +536,7 @@ def main(args={}):
         print(type(e).__name__, __file__, e.__traceback__.tb_lineno)
         instax.log(f'Error: {e}')
     finally:
-        sleep(60)
+        instax.wait_one_minute()
         print('finally, disconnect')
         instax.disconnect()  # all done, disconnect
 
