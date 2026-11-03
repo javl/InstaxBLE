@@ -55,7 +55,7 @@ The image send to the printer should be a JPEG at a specific image size, dependi
     pip install -r requirements.txt
 
     # Run the example
-    python3 instax-ble.py
+    python3 InstaxBLE.py
 
 
 ### Useful to know
