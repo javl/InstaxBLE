@@ -1,3 +1,4 @@
 Pillow>=9.5.0
 pycodestyle>=2.10.0
 simplepyble>=0.6.1
+Flask>=3.0

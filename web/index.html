@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instax Printer</title>
+<style>
+  :root { --bg:#f6f6f4; --card:#fff; --text:#1c1c1c; --muted:#6b6b6b; --accent:#d4382c; --border:#ddd; --ok:#2a8a46; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161616; --card:#222; --text:#eee; --muted:#999; --border:#3a3a3a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
+  main { max-width:520px; margin:0 auto; display:grid; gap:16px; }
+  h1 { font-size:1.3rem; margin:0; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; display:grid; gap:12px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .grow { flex:1; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); display:inline-block; }
+  .dot.connected { background:var(--ok); }
+  .dot.connecting, .dot.printing { background:#e0a100; }
+  button { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  select, input[type=color] { font:inherit; }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:0; }
+  dt { color:var(--muted); } dd { margin:0; }
+  .preview { display:grid; place-items:center; background:var(--bg); border-radius:8px; min-height:160px; padding:8px; }
+  .preview img { max-width:100%; max-height:420px; border:1px solid var(--border); }
+  #error { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Instax Printer</h1>
+
+  <section class="card">
+    <div class="row">
+      <span class="dot" id="dot"></span>
+      <strong id="phase">disconnected</strong>
+      <span class="grow"></span>
+      <button id="connect">Connect</button>
+      <button id="disconnect" hidden>Disconnect</button>
+    </div>
+    <div class="muted" id="message"></div>
+    <dl id="info" hidden></dl>
+  </section>
+
+  <section class="card">
+    <input type="file" id="file" accept="image/*">
+    <div class="row">
+      <label>Fit
+        <select id="fit">
+          <option value="crop">Crop to fill</option>
+          <option value="pad">Fit with border</option>
+        </select>
+      </label>
+      <label id="bgLabel" hidden>Border <input type="color" id="background" value="#ffffff"></label>
+      <button id="rotate" title="Rotate 90°">Rotate ↻</button>
+    </div>
+    <div class="preview"><img id="preview" alt="" hidden><span class="muted" id="previewHint">Choose an image to preview it</span></div>
+    <div class="muted" id="sizeHint"></div>
+    <label class="row"><input type="checkbox" id="dry" checked> Dry run (send everything except the final print command)</label>
+    <button class="primary" id="print" disabled>Print</button>
+    <div id="error"></div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let phase = 'disconnected', printer = null, rotation = 0, previewUrl = null, previewSeq = 0;
+
+async function api(path, options) {
+  const res = await fetch(path, options);
+  if (!res.ok && res.headers.get('content-type')?.includes('json')) {
+    const body = await res.json();
+    throw new Error(body.error || res.statusText);
+  }
+  return res;
+}
+
+function showError(e) { $('error').textContent = e ? (e.message || e) : ''; }
+
+function render(s) {
+  phase = s.phase; printer = s.printer;
+  $('dot').className = 'dot ' + phase;
+  $('phase').textContent = phase + (s.dummy ? ' (dummy printer)' : '');
+  $('message').textContent = s.message || '';
+  $('connect').hidden = phase !== 'disconnected';
+  $('disconnect').hidden = phase !== 'connected';
+  $('connect').disabled = false;
+  const info = $('info');
+  info.hidden = !printer;
+  if (printer) {
+    info.innerHTML = `<dt>Model</dt><dd>${printer.model}</dd>
+      <dt>Film left</dt><dd>${printer.photosLeft}/10</dd>
+      <dt>Battery</dt><dd>${printer.battery}%${printer.charging ? ' (charging)' : ''}</dd>
+      <dt>Image size</dt><dd>${printer.width}×${printer.height}px</dd>`;
+  }
+  $('sizeHint').textContent = printer ? '' : 'Preview assumes an Instax Mini until a printer is connected.';
+  updatePrintButton();
+}
+
+function updatePrintButton() {
+  $('print').disabled = !($('file').files.length && phase === 'connected' && printer && printer.photosLeft > 0);
+  $('print').textContent = $('dry').checked ? 'Dry run' : 'Print';
+}
+
+function formData() {
+  const data = new FormData();
+  data.append('image', $('file').files[0]);
+  data.append('fit', $('fit').value);
+  data.append('rotate', rotation);
+  data.append('background', $('background').value);
+  return data;
+}
+
+async function updatePreview() {
+  if (!$('file').files.length) return;
+  const seq = ++previewSeq;
+  try {
+    const res = await api('/api/preview', { method: 'POST', body: formData() });
+    const blob = await res.blob();
+    if (seq !== previewSeq) return;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(blob);
+    $('preview').src = previewUrl;
+    $('preview').hidden = false;
+    $('previewHint').hidden = true;
+    showError();
+  } catch (e) { showError(e); }
+}
+
+async function poll() {
+  try { render(await (await api('/api/status')).json()); } catch (e) { /* server briefly unreachable */ }
+}
+
+$('connect').onclick = async () => {
+  $('connect').disabled = true;
+  try { render(await (await api('/api/connect', { method: 'POST' })).json()); showError(); } catch (e) { showError(e); }
+};
+$('disconnect').onclick = async () => {
+  try { await api('/api/disconnect', { method: 'POST' }); showError(); } catch (e) { showError(e); }
+};
+$('file').onchange = () => { updatePreview(); updatePrintButton(); };
+$('fit').onchange = () => { $('bgLabel').hidden = $('fit').value !== 'pad'; updatePreview(); };
+$('background').onchange = updatePreview;
+$('rotate').onclick = () => { rotation = (rotation + 90) % 360; updatePreview(); };
+$('dry').onchange = updatePrintButton;
+$('print').onclick = async () => {
+  const dry = $('dry').checked;
+  if (!dry && !confirm('Print this image? This uses one frame of film.')) return;
+  const data = formData();
+  data.append('dry_run', dry);
+  try { await api('/api/print', { method: 'POST', body: data }); showError(); } catch (e) { showError(e); }
+  poll();
+};
+
+setInterval(poll, 1500);
+poll();
+</script>
+</body>
+</html>

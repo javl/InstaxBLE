@@ -58,6 +58,15 @@ The image send to the printer should be a JPEG at a specific image size, dependi
     python3 InstaxBLE.py
 
 
+### Web GUI
+
+A small Flask app lets you pick an image, preview it cropped to your printer's size, and print it from the browser:
+
+    pip install -r requirements.txt
+    python3 app.py            # then open http://127.0.0.1:5000
+
+Run it on a machine with working Bluetooth (on Windows, not inside WSL). Use `--dummy` to try the UI without a printer, and `--host 0.0.0.0` to open it from your phone on the same network (there is no authentication, so only do that on a network you trust). Printing is a dry run by default; untick "Dry run" to actually print.
+
 ### Useful to know
 
 #### 1. Printing is disabled by default

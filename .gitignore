@@ -1,5 +1,6 @@
 .pyc
 venv/
+winvenv/
 .DS_Store
 __pycache__/
 old_files/
