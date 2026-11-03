@@ -6,9 +6,12 @@ Run it on a machine with working Bluetooth (on Windows, not WSL) and open
 http://127.0.0.1:5000. Use --dummy to try the UI without a printer.
 """
 import argparse
+import json
+import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
+from pathlib import Path
 from time import sleep
 
 from flask import Flask, jsonify, request, send_file, send_from_directory
@@ -29,8 +32,27 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_MB * 1024 * 1024
 executor = ThreadPoolExecutor(max_workers=1)
 lock = threading.Lock()
 state = {'phase': 'disconnected', 'message': ''}
-options = {'dummy': False}
+CONFIG_PATH = Path(os.environ.get('LOCALAPPDATA', Path.home())) / 'InstaxBLE' / 'config.json'
+options = {'dummy': False, 'auto_connect': False}
+RETRY_SECONDS = 10
 instax = None
+
+
+def load_saved():
+    """ The remembered printer as {'address': ..., 'name': ...}, or None """
+    try:
+        data = json.loads(CONFIG_PATH.read_text(encoding='utf-8'))
+        return data if data.get('address') else None
+    except (OSError, ValueError):
+        return None
+
+
+def save_saved(device):
+    if device is None:
+        CONFIG_PATH.unlink(missing_ok=True)
+        return
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CONFIG_PATH.write_text(json.dumps(device), encoding='utf-8')
 
 
 def set_state(phase, message=''):
@@ -93,9 +115,11 @@ def status_payload():
     with lock:
         payload = dict(state)
     payload['dummy'] = options['dummy']
+    payload['saved'] = load_saved()
     payload['printer'] = None
     if instax and payload['phase'] in ('connected', 'printing') and instax.printerSettings:
         payload['printer'] = {
+            'address': None if options['dummy'] else instax.peripheral.address(),
             'model': instax.printerSettings['modelName'],
             'photosLeft': instax.photosLeft,
             'battery': instax.batteryPercentage,
@@ -110,7 +134,9 @@ def do_connect():
     global instax
     set_state('connecting', 'Searching for printer...')
     try:
-        instax = InstaxBLE(dummy_printer=options['dummy'], verbose=True)
+        saved = load_saved()
+        instax = InstaxBLE(dummy_printer=options['dummy'], verbose=True,
+                           device_address=saved['address'] if saved else None)
         instax.connect(timeout=30)
         if options['dummy']:
             instax.photosLeft, instax.batteryPercentage = 10, 100
@@ -129,6 +155,7 @@ def do_connect():
 
 
 def do_disconnect():
+    options['auto_connect_paused'] = True  # a manual disconnect should stick
     try:
         if instax:
             instax.disconnect()
@@ -176,6 +203,7 @@ def api_status():
 def api_connect():
     if state['phase'] != 'disconnected':
         return jsonify(error='Already connected or connecting'), 409
+    options['auto_connect_paused'] = False
     set_state('connecting', 'Searching for printer...')
     executor.submit(do_connect)
     return jsonify(status_payload()), 202
@@ -222,9 +250,41 @@ def api_print():
     return jsonify(status_payload()), 202
 
 
-def configure(dummy=False):
-    """ Set up dummy mode (used by main() and by the tray launcher) """
+@app.post('/api/remember')
+def api_remember():
+    """ Remember the connected printer so we only ever auto-connect to it """
+    if state['phase'] != 'connected' or options['dummy'] or not instax or not instax.peripheral:
+        return jsonify(error='Connect to a real printer first'), 409
+    save_saved({'address': instax.peripheral.address(), 'name': instax.peripheral.identifier()})
+    return jsonify(status_payload())
+
+
+@app.post('/api/forget')
+def api_forget():
+    save_saved(None)
+    return jsonify(status_payload())
+
+
+def auto_connect_loop():
+    """ Keep trying to connect whenever we're disconnected (e.g. printer switched on later) """
+    while True:
+        sleep(RETRY_SECONDS)
+        if options.get('auto_connect_paused') or not (load_saved() or options['dummy']):
+            continue  # only auto-connect to a remembered printer, never to whichever one is nearby
+        status_payload()  # notices a lost link and flips the phase to disconnected
+        with lock:
+            if state['phase'] != 'disconnected':
+                continue
+            state['phase'], state['message'] = 'connecting', 'Searching for printer...'
+        executor.submit(do_connect)
+
+
+def configure(dummy=False, auto_connect=True):
+    """ Set up dummy mode and auto-connect (used by main() and by the tray launcher) """
     options['dummy'] = dummy
+    if auto_connect:
+        options['auto_connect'] = True
+        threading.Thread(target=auto_connect_loop, daemon=True).start()
     if dummy:
         # InstaxBLE looks for a Bluetooth adapter even in dummy mode
         import simplepyble
@@ -236,9 +296,10 @@ def main():
     parser.add_argument('--host', default='127.0.0.1', help='use 0.0.0.0 to allow other devices on your network')
     parser.add_argument('--port', type=int, default=5000)
     parser.add_argument('--dummy', action='store_true', help='fake printer, for trying the UI without Bluetooth')
+    parser.add_argument('--no-auto-connect', action='store_true', help="don't connect to the printer automatically")
     args = parser.parse_args()
 
-    configure(dummy=args.dummy)
+    configure(dummy=args.dummy, auto_connect=not args.no_auto_connect)
     app.run(host=args.host, port=args.port, threaded=True)
 
 

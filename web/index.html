@@ -42,6 +42,8 @@
       <span class="grow"></span>
       <button id="connect">Connect</button>
       <button id="disconnect" hidden>Disconnect</button>
+      <button id="remember" hidden>Auto-connect to this printer</button>
+      <button id="forget" hidden>Forget printer</button>
     </div>
     <div class="muted" id="message"></div>
     <dl id="info" hidden></dl>
@@ -69,7 +71,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-let phase = 'disconnected', printer = null, rotation = 0, previewUrl = null, previewSeq = 0;
+let saved = null, phase = 'disconnected', printer = null, rotation = 0, previewUrl = null, previewSeq = 0;
 
 async function api(path, options) {
   const res = await fetch(path, options);
@@ -90,6 +92,10 @@ function render(s) {
   $('connect').hidden = phase !== 'disconnected';
   $('disconnect').hidden = phase !== 'connected';
   $('connect').disabled = false;
+  saved = s.saved;
+  $('remember').hidden = !(phase === 'connected' && !s.dummy && !(saved && printer && saved.address === printer.address));
+  $('forget').hidden = !saved;
+  $('forget').textContent = saved ? `Forget ${saved.name}` : '';
   const info = $('info');
   info.hidden = !printer;
   if (printer) {
@@ -139,6 +145,12 @@ async function poll() {
 $('connect').onclick = async () => {
   $('connect').disabled = true;
   try { render(await (await api('/api/connect', { method: 'POST' })).json()); showError(); } catch (e) { showError(e); }
+};
+$('remember').onclick = async () => {
+  try { render(await (await api('/api/remember', { method: 'POST' })).json()); showError(); } catch (e) { showError(e); }
+};
+$('forget').onclick = async () => {
+  try { render(await (await api('/api/forget', { method: 'POST' })).json()); showError(); } catch (e) { showError(e); }
 };
 $('disconnect').onclick = async () => {
   try { await api('/api/disconnect', { method: 'POST' }); showError(); } catch (e) { showError(e); }

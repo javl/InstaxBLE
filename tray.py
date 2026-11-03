@@ -77,6 +77,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=5000)
     parser.add_argument('--dummy', action='store_true', help='fake printer, for trying things out')
+    parser.add_argument('--no-auto-connect', action='store_true', help="don't connect to the printer automatically")
     parser.add_argument('--no-browser', action='store_true', help="don't open the page on launch (used for start at login)")
     parser.add_argument('--set-autostart', choices=('on', 'off'), help='enable or disable start at login, then exit')
     args = parser.parse_args()
@@ -89,7 +90,7 @@ def main():
     url = f'http://127.0.0.1:{args.port}'
 
     import app as webapp
-    webapp.configure(dummy=args.dummy)
+    webapp.configure(dummy=args.dummy, auto_connect=not args.no_auto_connect)
     try:
         server = make_server('127.0.0.1', args.port, webapp.app, threaded=True)
     except OSError:
