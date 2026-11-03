@@ -3,7 +3,7 @@
 Small Flask GUI for InstaxBLE.
 
 Run it on a machine with working Bluetooth (on Windows, not WSL) and open
-http://127.0.0.1:5000. Use --dummy to try the UI without a printer.
+http://127.0.0.1:8765. Use --dummy to try the UI without a printer.
 """
 import argparse
 import json
@@ -294,7 +294,7 @@ def configure(dummy=False, auto_connect=True):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--host', default='127.0.0.1', help='use 0.0.0.0 to allow other devices on your network')
-    parser.add_argument('--port', type=int, default=5000)
+    parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--dummy', action='store_true', help='fake printer, for trying the UI without Bluetooth')
     parser.add_argument('--no-auto-connect', action='store_true', help="don't connect to the printer automatically")
     args = parser.parse_args()

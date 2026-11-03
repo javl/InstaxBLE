@@ -50,7 +50,7 @@ def autostart_enabled():
         return False
 
 
-def set_autostart(enabled, port=5000, dummy=False):
+def set_autostart(enabled, port=8765, dummy=False):
     import winreg
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as key:
         if enabled:
@@ -75,7 +75,7 @@ def make_icon():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--port', type=int, default=5000)
+    parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--dummy', action='store_true', help='fake printer, for trying things out')
     parser.add_argument('--no-auto-connect', action='store_true', help="don't connect to the printer automatically")
     parser.add_argument('--no-browser', action='store_true', help="don't open the page on launch (used for start at login)")
