@@ -222,6 +222,15 @@ def api_print():
     return jsonify(status_payload()), 202
 
 
+def configure(dummy=False):
+    """ Set up dummy mode (used by main() and by the tray launcher) """
+    options['dummy'] = dummy
+    if dummy:
+        # InstaxBLE looks for a Bluetooth adapter even in dummy mode
+        import simplepyble
+        simplepyble.Adapter.get_adapters = staticmethod(lambda: [object()])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--host', default='127.0.0.1', help='use 0.0.0.0 to allow other devices on your network')
@@ -229,12 +238,7 @@ def main():
     parser.add_argument('--dummy', action='store_true', help='fake printer, for trying the UI without Bluetooth')
     args = parser.parse_args()
 
-    options['dummy'] = args.dummy
-    if args.dummy:
-        # InstaxBLE looks for a Bluetooth adapter even in dummy mode
-        import simplepyble
-        simplepyble.Adapter.get_adapters = staticmethod(lambda: [object()])
-
+    configure(dummy=args.dummy)
     app.run(host=args.host, port=args.port, threaded=True)
 
 
